@@ -4,7 +4,7 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { userId, car, destination, date } = body;
 
-  const LINE_ACCESS_TOKEN = 'tamrZcN+QLyilGY2XppVnB7NUPP2rETwdPNY597zAXbJftyns0O1jGvnoPYr00cuNTcAxt9oPnGVDN0IDQkaaLUzWKQnY7sKrOXYB32piN6z/wOr59YxmGwNiWdjOm/p4roTvzhNp53rkJqTLMSUrAdB04t89/1O/w1cDnyilFU=';
+  const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN;
 
   const message = {
     to: userId,

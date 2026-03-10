@@ -8,6 +8,7 @@ import liff from '@line/liff'; // นำเข้า LIFF SDK
 export default function Home() {
   const [formData, setFormData] = useState({
     bookerName: '',
+    userId: '',
     useDate: '',
     destination: '',
     purpose: '',
@@ -21,16 +22,21 @@ export default function Home() {
   useEffect(() => {
     const initLiff = async () => {
       try {
-        // 1. ใส่ LIFF ID ของคุณตรงนี้ครับ
         await liff.init({ liffId: '2009402149-lV41Nacx' }); 
         
         if (liff.isLoggedIn()) {
-          const profile = await liff.getProfile();
-          // 2. ดึงชื่อจาก LINE มาใส่ในช่องผู้จองทันที
-          setFormData(prev => ({ ...prev, bookerName: profile.displayName }));
+          const profile = await liff.getProfile() as {
+  userId: string;
+  displayName: string;
+};
+          // 2. เก็บทั้งชื่อ และ userId ลงใน formData
+          setFormData(prev => ({ 
+            ...prev, 
+            bookerName: profile.displayName,
+            userId: profile.userId 
+          }));
           setIsLiffReady(true);
         } else {
-          // ถ้ายังไม่ได้ Login ให้เด้งหน้า Login ของ LINE
           liff.login();
         }
       } catch (error) {
@@ -48,33 +54,31 @@ export default function Home() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // 1. บันทึกลง Firebase (เดิมของคุณ)
       await addDoc(collection(db, 'bookings'), {
         ...formData,
         createdAt: serverTimestamp(),
         status: 'pending'
       });
 
-      // 2. ส่งแจ้งเตือนผ่าน LINE Bot (เพิ่มเข้าไปใหม่)
-      // ส่งข้อมูลที่เราต้องการให้บอทพูดไปที่ API ที่เราสร้างไว้
+      // 3. แก้ไขการส่งข้อมูลให้ตรงกับค่าที่มีใน formData
       await fetch('/api/notify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: formData.userId,        // ไอดี LINE ของคนจอง
-          car: formData.carType,          // ประเภทรถที่เลือก
-          destination: formData.destination, // จุดหมาย
-          date: formData.useDate          // วันที่จอง
+          userId: formData.userId,        // มีค่าแล้วเพราะเพิ่มในขั้นตอนที่ 2
+          car: formData.car,           // เปลี่ยนจาก carType เป็น car ให้ตรงกับ state
+          destination: formData.destination,
+          date: formData.useDate
         })
       });
 
       alert('จองรถสำเร็จและส่งข้อความยืนยันเรียบร้อยครับ! 🎉');
-      
-      // เคลียร์ฟอร์ม
-      setFormData(prev => ({ ...prev, useDate: '', destination: '', purpose: '' }));
-
+      setFormData(prev => ({ 
+  ...prev, 
+  bookerName: profile.displayName,
+  userId: profile.userId  // ← เพิ่มตรงนี้
+}));
     } catch (error) {
-      console.error("Error:", error);
       alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
     } finally {
       setIsSubmitting(false);
