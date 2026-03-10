@@ -1,32 +1,32 @@
 // app/book/page.tsx
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
-import liff from '@line/liff';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../../lib/firebase";
+import liff from "@line/liff";
 
 const availableCars = [
   {
-    id: 'MIRAGS (775-1247)',
-    name: 'Mitsubishi Mirage',
-    plate: '775-1247',
-    imageUrl: '/cars/mirage.png',
+    id: "MIRAGS (์1 ฒต 4165)",
+    name: "Suzuki Carry",
+    plate: "1 ฒต 4165",
+    imageUrl: "/cars/mirage.png",
     isRental: false,
-    badge: 'ประจำการ',
+    badge: "รถบริษัท",
   },
   {
-    id: 'RENTAL-TEMP',
-    name: 'รถเช่าชั่วคราว',
-    plate: 'รอระบุ',
-    imageUrl: 'https://cdn-icons-png.flaticon.com/512/3085/3085330.png',
+    id: "RENTAL-TEMP",
+    name: "รถเช่าชั่วคราว",
+    plate: "รอระบุ",
+    imageUrl: "https://cdn-icons-png.flaticon.com/512/3085/3085330.png",
     isRental: true,
-    badge: 'รถเช่า',
+    badge: "รถเช่า",
   },
 ];
 
-const steps = ['เลือกรถ', 'เวลา', 'ปลายทาง'];
+const steps = ["เลือกรถ", "เวลา", "ปลายทาง"];
 
 export default function BookCarPage() {
   const router = useRouter();
@@ -36,38 +36,42 @@ export default function BookCarPage() {
   const [submitted, setSubmitted] = useState(false);
 
   const [formData, setFormData] = useState({
-    bookerName: '',
-    userId: '',
-    car: 'MIRAGS (775-1247)',
-    startDatetime: '',
-    endDatetime: '',
-    destination: '',
-    purpose: '',
+    bookerName: "",
+    userId: "",
+    pictureUrl: "",
+    car: "MIRAGS (775-1247)",
+    startDatetime: "",
+    endDatetime: "",
+    destination: "",
+    purpose: "",
   });
 
   useEffect(() => {
     const initLiff = async () => {
       try {
-        await liff.init({ liffId: '2009402149-lV41Nacx' });
+        await liff.init({ liffId: "2009402149-lV41Nacx" });
         if (liff.isLoggedIn()) {
           const profile = await liff.getProfile();
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
             bookerName: profile.displayName,
             userId: profile.userId,
+            pictureUrl: profile.pictureUrl ?? "",
           }));
           setIsLiffReady(true);
         } else {
           liff.login();
         }
       } catch (error) {
-        console.error('LIFF init failed', error);
+        console.error("LIFF init failed", error);
       }
     };
     initLiff();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -75,7 +79,7 @@ export default function BookCarPage() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await addDoc(collection(db, 'bookings'), {
+      await addDoc(collection(db, "bookings"), {
         carName: formData.car,
         bookerId: formData.userId,
         bookerName: formData.bookerName,
@@ -83,12 +87,12 @@ export default function BookCarPage() {
         endDatetime: formData.endDatetime,
         destination: formData.destination,
         purpose: formData.purpose,
-        status: 'pending',
+        status: "pending",
         createdAt: serverTimestamp(),
       });
-      await fetch('/api/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch("/api/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           bookerName: formData.bookerName,
           car: formData.car,
@@ -99,7 +103,7 @@ export default function BookCarPage() {
       setSubmitted(true);
     } catch (error) {
       console.error(error);
-      alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
+      alert("เกิดข้อผิดพลาด กรุณาลองใหม่");
     } finally {
       setIsSubmitting(false);
     }
@@ -108,35 +112,106 @@ export default function BookCarPage() {
   const canProceedStep0 = !!formData.car;
   const canProceedStep1 = !!formData.startDatetime && !!formData.endDatetime;
   const canProceedStep2 = !!formData.destination && !!formData.purpose;
-  const selectedCar = availableCars.find(c => c.id === formData.car);
+  const selectedCar = availableCars.find((c) => c.id === formData.car);
 
   // ── Success Screen ──
   if (submitted) {
     return (
       <>
         <GlobalStyles />
-        <div className="page-bg" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '24px' }}>
-          <div className="success-pop" style={{ textAlign: 'center', width: '100%', maxWidth: 400 }}>
+        <div
+          className="page-bg"
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "100vh",
+            padding: "24px",
+          }}
+        >
+          <div
+            className="success-pop"
+            style={{ textAlign: "center", width: "100%", maxWidth: 400 }}
+          >
             {/* Check icon */}
-            <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'linear-gradient(135deg, #22c55e, #16a34a)', margin: '0 auto 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(34,197,94,0.3)' }}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="38" height="38">
-                <path fillRule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z" clipRule="evenodd" />
+            <div
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #22c55e, #16a34a)",
+                margin: "0 auto 20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 8px 24px rgba(34,197,94,0.3)",
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="white"
+                width="38"
+                height="38"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z"
+                  clipRule="evenodd"
+                />
               </svg>
             </div>
 
-            <h2 style={{ fontFamily: 'Prompt,sans-serif', fontSize: 22, fontWeight: 700, color: '#1e3a5f', marginBottom: 4 }}>จองรถสำเร็จ! 🎉</h2>
-            <p style={{ color: '#64748b', fontSize: 13, marginBottom: 20 }}>ระบบส่งการแจ้งเตือนไปที่ LINE ของคุณแล้ว</p>
+            <h2
+              style={{
+                fontFamily: "Prompt,sans-serif",
+                fontSize: 22,
+                fontWeight: 700,
+                color: "#1e3a5f",
+                marginBottom: 4,
+              }}
+            >
+              จองรถสำเร็จ! 🎉
+            </h2>
+            <p style={{ color: "#64748b", fontSize: 13, marginBottom: 20 }}>
+              ระบบส่งการแจ้งเตือนไปที่ LINE ของคุณแล้ว
+            </p>
 
             {/* Summary */}
-            <div className="white-card" style={{ textAlign: 'left', marginBottom: 20 }}>
-              <SummaryRow icon="🚗" label="รถ" value={selectedCar?.name || formData.car} />
-              <SummaryRow icon="📍" label="ปลายทาง" value={formData.destination} />
-              <SummaryRow icon="🕐" label="ออกเดินทาง" value={formatDatetime(formData.startDatetime)} />
-              <SummaryRow icon="🕔" label="กลับถึง" value={formatDatetime(formData.endDatetime)} />
-              <SummaryRow icon="📋" label="วัตถุประสงค์" value={formData.purpose} last />
+            <div
+              className="white-card"
+              style={{ textAlign: "left", marginBottom: 20 }}
+            >
+              <SummaryRow
+                icon="🚗"
+                label="รถ"
+                value={selectedCar?.name || formData.car}
+              />
+              <SummaryRow
+                icon="📍"
+                label="ปลายทาง"
+                value={formData.destination}
+              />
+              <SummaryRow
+                icon="🕐"
+                label="ออกเดินทาง"
+                value={formatDatetime(formData.startDatetime)}
+              />
+              <SummaryRow
+                icon="🕔"
+                label="กลับถึง"
+                value={formatDatetime(formData.endDatetime)}
+              />
+              <SummaryRow
+                icon="📋"
+                label="วัตถุประสงค์"
+                value={formData.purpose}
+                last
+              />
             </div>
 
-            <button className="btn-primary" onClick={() => router.push('/')}>
+            <button className="btn-primary" onClick={() => router.push("/")}>
               กลับหน้าหลัก
             </button>
           </div>
@@ -148,71 +223,150 @@ export default function BookCarPage() {
   return (
     <>
       <GlobalStyles />
-      <div className="page-bg" style={{ minHeight: '100vh', paddingBottom: 32 }}>
-
+      <div
+        className="page-bg"
+        style={{ minHeight: "100vh", paddingBottom: 32 }}
+      >
         {/* ── Header ── */}
         <header className="app-header">
           <button
             className="back-btn"
-            onClick={() => currentStep > 0 ? setCurrentStep(s => s - 1) : router.back()}
+            onClick={() =>
+              currentStep > 0 ? setCurrentStep((s) => s - 1) : router.back()
+            }
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" width="18" height="18">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2.5}
+              stroke="currentColor"
+              width="18"
+              height="18"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.75 19.5L8.25 12l7.5-7.5"
+              />
             </svg>
           </button>
 
           {/* Logo + Title */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <img src="/logo.jpg" alt="HSD" style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover' }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <img
+              src="/logo.jpg"
+              alt="HSD"
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 8,
+                objectFit: "cover",
+              }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }}
+            />
             <div>
               <p
-  title="HARU SYSTEM DEVELOPMENT (THAILAND) CO.,LTD."
-  style={{
-    fontSize: 10,
-    color: '#94a3b8',
-    margin: 0,
-    lineHeight: 1,
-    maxWidth: 160,        // จำกัดความกว้าง
-    overflow: 'hidden',
-    whiteSpace: 'nowrap',
-    textOverflow: 'ellipsis',
-  }}
->
-  HARU SYSTEM DEVELOPMENT (THAILAND) CO.,LTD.
-</p>
-<h1 style={{ fontSize: 15, fontWeight: 700, color: '#1e3a5f', margin: 0, fontFamily: 'Prompt,sans-serif' }}>
-  จองรถบริษัท
-</h1>
+                title="HARU SYSTEM DEVELOPMENT (THAILAND) CO.,LTD."
+                style={{
+                  fontSize: 10,
+                  color: "#94a3b8",
+                  margin: 0,
+                  lineHeight: 1,
+                  maxWidth: 160, // จำกัดความกว้าง
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                HARU SYSTEM DEVELOPMENT (THAILAND) CO.,LTD.
+              </p>
+              <h1
+                style={{
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: "#1e3a5f",
+                  margin: 0,
+                  fontFamily: "Prompt,sans-serif",
+                }}
+              >
+                จองรถบริษัท
+              </h1>
             </div>
           </div>
 
           {/* User chip */}
           {formData.bookerName && (
             <div className="user-chip">
-              <div className="user-avatar">{formData.bookerName.charAt(0)}</div>
-              <span>{formData.bookerName.split(' ')[0]}</span>
-            </div>
+  {formData.pictureUrl ? (
+    <img
+      src={formData.pictureUrl}
+      alt="profile"
+      style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover' }}
+    />
+  ) : (
+    <div className="user-avatar">{formData.bookerName.charAt(0)}</div>
+  )}
+  <span>{formData.bookerName.split(' ')[0]}</span>
+</div>
           )}
         </header>
 
-        <div style={{ maxWidth: 440, margin: '0 auto', padding: '16px 16px 0' }}>
-
+        <div
+          style={{ maxWidth: 440, margin: "0 auto", padding: "16px 16px 0" }}
+        >
           {/* ── Step Indicator ── */}
           <div className="step-bar">
             {steps.map((label, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', flex: i < steps.length - 1 ? 1 : 'none' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                  <div className={`step-dot ${i < currentStep ? 'done' : i === currentStep ? 'active' : 'idle'}`}>
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  flex: i < steps.length - 1 ? 1 : "none",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <div
+                    className={`step-dot ${i < currentStep ? "done" : i === currentStep ? "active" : "idle"}`}
+                  >
                     {i < currentStep ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="11" height="11">
-                        <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        width="11"
+                        height="11"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                          clipRule="evenodd"
+                        />
                       </svg>
-                    ) : i + 1}
+                    ) : (
+                      i + 1
+                    )}
                   </div>
-                  <span className={`step-label ${i === currentStep ? 'active' : i < currentStep ? 'done' : ''}`}>{label}</span>
+                  <span
+                    className={`step-label ${i === currentStep ? "active" : i < currentStep ? "done" : ""}`}
+                  >
+                    {label}
+                  </span>
                 </div>
                 {i < steps.length - 1 && (
-                  <div className={`step-line ${i < currentStep ? 'done' : ''}`} />
+                  <div
+                    className={`step-line ${i < currentStep ? "done" : ""}`}
+                  />
                 )}
               </div>
             ))}
@@ -221,13 +375,14 @@ export default function BookCarPage() {
           {/* ── Form Card ── */}
           <div className="white-card">
             {!isLiffReady ? (
-              <div style={{ padding: '40px 0', textAlign: 'center' }}>
-                <div className="spinner" style={{ margin: '0 auto 12px' }} />
-                <p style={{ fontSize: 13, color: '#94a3b8' }}>กำลังโหลดข้อมูล LINE...</p>
+              <div style={{ padding: "40px 0", textAlign: "center" }}>
+                <div className="spinner" style={{ margin: "0 auto 12px" }} />
+                <p style={{ fontSize: 13, color: "#94a3b8" }}>
+                  กำลังโหลดข้อมูล LINE...
+                </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
-
                 {/* ═══ STEP 0: เลือกรถ ═══ */}
                 {currentStep === 0 && (
                   <div className="step-content">
@@ -235,8 +390,45 @@ export default function BookCarPage() {
                     <div className="field-group">
                       <label className="field-label">ผู้จอง</label>
                       <div className="booker-row">
-                        <div className="booker-avatar">{formData.bookerName.charAt(0)}</div>
-                        <span className="booker-name">{formData.bookerName}</span>
+                        {formData.pictureUrl ? (
+                          <img
+                            src={formData.pictureUrl}
+                            alt="profile"
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: "50%",
+                              objectFit: "cover",
+                              border: "2px solid #bfdbfe",
+                              flexShrink: 0,
+                            }}
+                          />
+                        ) : (
+                          <div className="booker-avatar">
+                            {formData.bookerName.charAt(0)}
+                          </div>
+                        )}
+                        <div style={{ flex: 1 }}>
+                          <p
+                            style={{
+                              fontSize: 11,
+                              color: "#94a3b8",
+                              margin: 0,
+                            }}
+                          >
+                            ผู้จอง
+                          </p>
+                          <p
+                            style={{
+                              fontSize: 14,
+                              fontWeight: 700,
+                              color: "#1e293b",
+                              margin: 0,
+                            }}
+                          >
+                            {formData.bookerName}
+                          </p>
+                        </div>
                         <span className="verified-badge">✓ ยืนยัน</span>
                       </div>
                     </div>
@@ -244,32 +436,131 @@ export default function BookCarPage() {
                     {/* Car Selection */}
                     <div className="field-group">
                       <label className="field-label">เลือกรถยนต์ *</label>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                        {availableCars.map((car) => (
-                          <div
-                            key={car.id}
-                            className={`car-card ${formData.car === car.id ? 'selected' : ''}`}
-                            onClick={() => setFormData({ ...formData, car: car.id })}
-                          >
-                            <span className={`car-badge ${car.isRental ? 'rental' : 'regular'}`}>{car.badge}</span>
-                            <div style={{ height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '8px 0' }}>
-                              <img src={car.imageUrl} alt={car.name} style={{ maxHeight: '100%', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.12))' }} />
-                            </div>
-                            <p style={{ fontSize: 13, fontWeight: 700, color: '#1e3a5f', marginBottom: 2, lineHeight: 1.3 }}>{car.name}</p>
-                            <p style={{ fontSize: 11, color: '#94a3b8' }}>ทะเบียน: {car.plate}</p>
-                            {formData.car === car.id && (
-                              <div className="check-badge">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="white" width="11" height="11">
-                                  <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                                </svg>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 10,
+                        }}
+                      >
+                        {availableCars.map((car) => {
+                          const isSelected = formData.car === car.id;
+                          return (
+                            <div
+                              key={car.id}
+                              onClick={() =>
+                                setFormData({ ...formData, car: car.id })
+                              }
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 14,
+                                border: `2px solid ${isSelected ? "#1d4ed8" : "#e2e8f0"}`,
+                                borderRadius: 14,
+                                padding: "12px 14px",
+                                cursor: "pointer",
+                                background: isSelected ? "#eff6ff" : "white",
+                                boxShadow: isSelected
+                                  ? "0 0 0 3px rgba(29,78,216,0.1), 0 4px 12px rgba(29,78,216,0.1)"
+                                  : "0 1px 4px rgba(0,0,0,0.05)",
+                                transition: "all 0.2s",
+                              }}
+                            >
+                              {/* รูปรถ */}
+                              <div style={{
+  width: 80, height: 68, flexShrink: 0,       // ขยายจาก 72x56
+  background: isSelected ? '#dbeafe' : '#f1f5f9',
+  borderRadius: 10,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  overflow: 'hidden',
+}}>
+  <img
+    src={car.imageUrl}
+    alt={car.name}
+    style={{
+      width: '100%',
+      height: '100%',
+      objectFit: car.isRental ? 'contain' : 'cover',   // รูปจริง = cover, icon = contain
+      borderRadius: 10,
+      padding: car.isRental ? 8 : 0,                   // icon เว้น padding
+    }}
+  />
+</div>
+
+                              {/* ข้อมูล */}
+                              <div style={{ flex: 1 }}>
+                                <span
+                                  className={`car-badge ${car.isRental ? "rental" : "regular"}`}
+                                >
+                                  {car.badge}
+                                </span>
+                                <p
+                                  style={{
+                                    fontSize: 14,
+                                    fontWeight: 700,
+                                    color: "#1e293b",
+                                    margin: "4px 0 2px",
+                                  }}
+                                >
+                                  {car.name}
+                                </p>
+                                <p
+                                  style={{
+                                    fontSize: 12,
+                                    color: "#94a3b8",
+                                    margin: 0,
+                                  }}
+                                >
+                                  ทะเบียน: {car.plate}
+                                </p>
                               </div>
-                            )}
-                          </div>
-                        ))}
+
+                              {/* Radio indicator */}
+                              <div
+                                style={{
+                                  width: 22,
+                                  height: 22,
+                                  borderRadius: "50%",
+                                  flexShrink: 0,
+                                  border: `2px solid ${isSelected ? "#1d4ed8" : "#d1d5db"}`,
+                                  background: isSelected ? "#1d4ed8" : "white",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  transition: "all 0.2s",
+                                  boxShadow: isSelected
+                                    ? "0 2px 8px rgba(29,78,216,0.3)"
+                                    : "none",
+                                }}
+                              >
+                                {isSelected && (
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 20 20"
+                                    fill="white"
+                                    width="12"
+                                    height="12"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 
-                    <button type="button" disabled={!canProceedStep0} onClick={() => setCurrentStep(1)} className="btn-primary">
+                    <button
+                      type="button"
+                      disabled={!canProceedStep0}
+                      onClick={() => setCurrentStep(1)}
+                      className="btn-primary"
+                    >
                       ถัดไป: เลือกเวลา →
                     </button>
                   </div>
@@ -280,21 +571,53 @@ export default function BookCarPage() {
                   <div className="step-content">
                     {/* Selected Car preview */}
                     <div className="info-strip">
-                      <img src={selectedCar?.imageUrl} alt="" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+                      <img
+                        src={selectedCar?.imageUrl}
+                        alt=""
+                        style={{ width: 36, height: 36, objectFit: "contain" }}
+                      />
                       <div>
-                        <p style={{ fontSize: 10, color: '#64748b', margin: 0 }}>รถที่เลือก</p>
-                        <p style={{ fontSize: 14, fontWeight: 700, color: '#1e3a5f', margin: 0 }}>{selectedCar?.name}</p>
+                        <p
+                          style={{ fontSize: 10, color: "#64748b", margin: 0 }}
+                        >
+                          รถที่เลือก
+                        </p>
+                        <p
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 700,
+                            color: "#1e3a5f",
+                            margin: 0,
+                          }}
+                        >
+                          {selectedCar?.name}
+                        </p>
                       </div>
                     </div>
 
                     <div className="field-group">
                       <label className="field-label">🕐 เวลาออกเดินทาง *</label>
-                      <input type="datetime-local" name="startDatetime" required value={formData.startDatetime} onChange={handleChange} className="input-field" />
+                      <input
+                        type="datetime-local"
+                        name="startDatetime"
+                        required
+                        value={formData.startDatetime}
+                        onChange={handleChange}
+                        className="input-field"
+                      />
                     </div>
 
                     <div className="field-group">
                       <label className="field-label">🕔 เวลากลับถึง *</label>
-                      <input type="datetime-local" name="endDatetime" required value={formData.endDatetime} min={formData.startDatetime} onChange={handleChange} className="input-field" />
+                      <input
+                        type="datetime-local"
+                        name="endDatetime"
+                        required
+                        value={formData.endDatetime}
+                        min={formData.startDatetime}
+                        onChange={handleChange}
+                        className="input-field"
+                      />
                     </div>
 
                     {/* Duration badge */}
@@ -302,15 +625,48 @@ export default function BookCarPage() {
                       <div className="duration-badge">
                         <span>⏱</span>
                         <div>
-                          <p style={{ fontSize: 11, color: '#16a34a', margin: 0, fontWeight: 600 }}>ระยะเวลาใช้งาน</p>
-                          <p style={{ fontSize: 14, fontWeight: 700, color: '#15803d', margin: 0 }}>{getDuration(formData.startDatetime, formData.endDatetime)}</p>
+                          <p
+                            style={{
+                              fontSize: 11,
+                              color: "#16a34a",
+                              margin: 0,
+                              fontWeight: 600,
+                            }}
+                          >
+                            ระยะเวลาใช้งาน
+                          </p>
+                          <p
+                            style={{
+                              fontSize: 14,
+                              fontWeight: 700,
+                              color: "#15803d",
+                              margin: 0,
+                            }}
+                          >
+                            {getDuration(
+                              formData.startDatetime,
+                              formData.endDatetime,
+                            )}
+                          </p>
                         </div>
                       </div>
                     )}
 
-                    <div style={{ display: 'flex', gap: 10 }}>
-                      <button type="button" onClick={() => setCurrentStep(0)} className="btn-secondary">← ย้อนกลับ</button>
-                      <button type="button" disabled={!canProceedStep1} onClick={() => setCurrentStep(2)} className="btn-primary" style={{ flex: 1 }}>
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(0)}
+                        className="btn-secondary"
+                      >
+                        ← ย้อนกลับ
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!canProceedStep1}
+                        onClick={() => setCurrentStep(2)}
+                        className="btn-primary"
+                        style={{ flex: 1 }}
+                      >
                         ถัดไป: ปลายทาง →
                       </button>
                     </div>
@@ -322,36 +678,94 @@ export default function BookCarPage() {
                   <div className="step-content">
                     <div className="field-group">
                       <label className="field-label">📍 จุดหมายเดินทาง *</label>
-                      <input type="text" name="destination" required value={formData.destination} onChange={handleChange} placeholder="เช่น DCI, Daikin, HARU" className="input-field" />
+                      <input
+                        type="text"
+                        name="destination"
+                        required
+                        value={formData.destination}
+                        onChange={handleChange}
+                        placeholder="เช่น DCI, Daikin, HARU"
+                        className="input-field"
+                      />
                     </div>
 
                     <div className="field-group">
                       <label className="field-label">📋 วัตถุประสงค์ *</label>
-                      <input type="text" name="purpose" required value={formData.purpose} onChange={handleChange} placeholder="เช่น Install, Test run, Meeting" className="input-field" />
+                      <input
+                        type="text"
+                        name="purpose"
+                        required
+                        value={formData.purpose}
+                        onChange={handleChange}
+                        placeholder="เช่น Install, Test run, Meeting"
+                        className="input-field"
+                      />
                     </div>
 
                     {/* Summary */}
                     {canProceedStep2 && (
                       <div className="summary-box">
                         <p className="summary-title">📌 สรุปการจอง</p>
-                        <SummaryRow icon="👤" label="ผู้จอง" value={formData.bookerName} />
-                        <SummaryRow icon="🚗" label="รถ" value={selectedCar?.name || ''} />
-                        <SummaryRow icon="🕐" label="ออกเดินทาง" value={formatDatetime(formData.startDatetime)} />
-                        <SummaryRow icon="🕔" label="กลับถึง" value={formatDatetime(formData.endDatetime)} />
-                        <SummaryRow icon="📍" label="ปลายทาง" value={formData.destination} />
-                        <SummaryRow icon="📋" label="วัตถุประสงค์" value={formData.purpose} last />
+                        <SummaryRow
+                          icon="👤"
+                          label="ผู้จอง"
+                          value={formData.bookerName}
+                        />
+                        <SummaryRow
+                          icon="🚗"
+                          label="รถ"
+                          value={selectedCar?.name || ""}
+                        />
+                        <SummaryRow
+                          icon="🕐"
+                          label="ออกเดินทาง"
+                          value={formatDatetime(formData.startDatetime)}
+                        />
+                        <SummaryRow
+                          icon="🕔"
+                          label="กลับถึง"
+                          value={formatDatetime(formData.endDatetime)}
+                        />
+                        <SummaryRow
+                          icon="📍"
+                          label="ปลายทาง"
+                          value={formData.destination}
+                        />
+                        <SummaryRow
+                          icon="📋"
+                          label="วัตถุประสงค์"
+                          value={formData.purpose}
+                          last
+                        />
                       </div>
                     )}
 
-                    <div style={{ display: 'flex', gap: 10 }}>
-                      <button type="button" onClick={() => setCurrentStep(1)} className="btn-secondary">← ย้อนกลับ</button>
-                      <button type="submit" disabled={isSubmitting || !canProceedStep2} className="btn-primary btn-green" style={{ flex: 1 }}>
-                        {isSubmitting ? <><span className="spinner-sm" />กำลังบันทึก...</> : '✅ ยืนยันการจอง'}
+                    <div style={{ display: "flex", gap: 10 }}>
+                      <button
+                        type="button"
+                        onClick={() => setCurrentStep(1)}
+                        className="btn-secondary"
+                      >
+                        ← ย้อนกลับ
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSubmitting || !canProceedStep2}
+                        className="btn-primary btn-green"
+                        style={{ flex: 1 }}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <span className="spinner-sm" />
+                            กำลังบันทึก...
+                          </>
+                        ) : (
+                          "✅ ยืนยันการจอง"
+                        )}
                       </button>
                     </div>
                   </div>
                 )}
-
               </form>
             )}
           </div>
@@ -363,24 +777,69 @@ export default function BookCarPage() {
 
 // ── Helpers ──
 
-function SummaryRow({ icon, label, value, last }: { icon: string; label: string; value: string; last?: boolean }) {
+function SummaryRow({
+  icon,
+  label,
+  value,
+  last,
+}: {
+  icon: string;
+  label: string;
+  value: string;
+  last?: boolean;
+}) {
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, paddingBottom: last ? 0 : 10, marginBottom: last ? 0 : 10, borderBottom: last ? 'none' : '1px solid #f1f5f9' }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "flex-start",
+        gap: 8,
+        paddingBottom: last ? 0 : 10,
+        marginBottom: last ? 0 : 10,
+        borderBottom: last ? "none" : "1px solid #f1f5f9",
+      }}
+    >
       <span style={{ fontSize: 14, lineHeight: 1.5 }}>{icon}</span>
-      <span style={{ fontSize: 12, color: '#94a3b8', width: 76, flexShrink: 0, lineHeight: 1.5 }}>{label}</span>
-      <span style={{ fontSize: 13, fontWeight: 600, color: '#1e3a5f', flex: 1, lineHeight: 1.5 }}>{value}</span>
+      <span
+        style={{
+          fontSize: 12,
+          color: "#94a3b8",
+          width: 76,
+          flexShrink: 0,
+          lineHeight: 1.5,
+        }}
+      >
+        {label}
+      </span>
+      <span
+        style={{
+          fontSize: 13,
+          fontWeight: 600,
+          color: "#1e3a5f",
+          flex: 1,
+          lineHeight: 1.5,
+        }}
+      >
+        {value}
+      </span>
     </div>
   );
 }
 
 function formatDatetime(dt: string): string {
-  if (!dt) return '';
-  return new Date(dt).toLocaleString('th-TH', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  if (!dt) return "";
+  return new Date(dt).toLocaleString("th-TH", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function getDuration(start: string, end: string): string {
   const ms = new Date(end).getTime() - new Date(start).getTime();
-  if (ms <= 0) return 'กรุณาตรวจสอบเวลา';
+  if (ms <= 0) return "กรุณาตรวจสอบเวลา";
   const h = Math.floor(ms / 3600000);
   const m = Math.floor((ms % 3600000) / 60000);
   return h > 0 ? `${h} ชั่วโมง ${m} นาที` : `${m} นาที`;
