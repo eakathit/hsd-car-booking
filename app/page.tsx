@@ -20,70 +20,71 @@ export default function Home() {
 
   // --- ส่วนของ LINE LIFF ---
   useEffect(() => {
-    const initLiff = async () => {
-      try {
-        await liff.init({ liffId: '2009402149-lV41Nacx' }); 
-        
-        if (liff.isLoggedIn()) {
-          const profile = await liff.getProfile() as {
-  userId: string;
-  displayName: string;
-};
-          // 2. เก็บทั้งชื่อ และ userId ลงใน formData
-          setFormData(prev => ({ 
-            ...prev, 
-            bookerName: profile.displayName,
-            userId: profile.userId 
-          }));
-          setIsLiffReady(true);
-        } else {
-          liff.login();
-        }
-      } catch (error) {
-        console.error('LIFF init failed', error);
+  const initLiff = async () => {
+    try {
+      await liff.init({ liffId: '2009402149-lV41Nacx' });
+
+      if (liff.isLoggedIn()) {
+        const profile = await liff.getProfile();
+
+        setFormData(prev => ({
+          ...prev,
+          bookerName: profile.displayName,
+          userId: profile.userId
+        }));
+
+        setIsLiffReady(true);
+      } else {
+        liff.login();
       }
-    };
-    initLiff();
-  }, []);
+    } catch (error) {
+      console.error('LIFF init failed', error);
+    }
+  };
+  initLiff();
+}, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
    const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      await addDoc(collection(db, 'bookings'), {
-        ...formData,
-        createdAt: serverTimestamp(),
-        status: 'pending'
-      });
+  e.preventDefault();
+  setIsSubmitting(true);
+  try {
+    await addDoc(collection(db, 'bookings'), {
+      ...formData,
+      createdAt: serverTimestamp(),
+      status: 'pending'
+    });
 
-      // 3. แก้ไขการส่งข้อมูลให้ตรงกับค่าที่มีใน formData
-      await fetch('/api/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: formData.userId,        // มีค่าแล้วเพราะเพิ่มในขั้นตอนที่ 2
-          car: formData.car,           // เปลี่ยนจาก carType เป็น car ให้ตรงกับ state
-          destination: formData.destination,
-          date: formData.useDate
-        })
-      });
+    await fetch('/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        bookerName: formData.bookerName,
+        car: formData.car,
+        destination: formData.destination,
+        date: formData.useDate
+      })
+    });
 
-      alert('จองรถสำเร็จและส่งข้อความยืนยันเรียบร้อยครับ! 🎉');
-      setFormData(prev => ({ 
-  ...prev, 
-  bookerName: profile.displayName,
-  userId: profile.userId  // ← เพิ่มตรงนี้
-}));
-    } catch (error) {
-      alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    alert('จองรถสำเร็จ! 🎉');
+
+    // ✅ เคลียร์แค่ field ที่ต้องการ
+    setFormData(prev => ({ 
+      ...prev, 
+      useDate: '', 
+      destination: '', 
+      purpose: '' 
+    }));
+
+  } catch (error) {
+    alert('เกิดข้อผิดพลาด กรุณาลองใหม่');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 font-sans">

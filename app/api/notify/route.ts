@@ -2,32 +2,29 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
   const body = await req.json();
-  const { userId, car, destination, date } = body;
+  const { car, destination, date, bookerName } = body;
 
   const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN;
 
-  const message = {
-    to: userId,
-    messages: [
-      {
-        type: 'text',
-        text: `🚗 ยืนยันการจองรถสำเร็จ!\n\nคุณ: ${car}\nไปที่: ${destination}\nวันที่: ${date}\n\nขอบคุณที่ใช้บริการ HSD ครับ 😊`
-      }
-    ]
-  };
-
   try {
-    const response = await fetch('https://api.line.me/v2/bot/message/push', {
+    const response = await fetch('https://api.line.me/v2/bot/message/broadcast', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${LINE_ACCESS_TOKEN}`
       },
-      body: JSON.stringify(message)
+      body: JSON.stringify({
+        messages: [
+          {
+            type: 'text',
+            text: `🚗 มีการจองรถใหม่!\n\nผู้จอง: ${bookerName}\nรถ: ${car}\nไปที่: ${destination}\nวันที่: ${date}`
+          }
+        ]
+      })
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: response.ok });
   } catch (error) {
-    return NextResponse.json({ success: false, error: 'Failed to send message' });
+    return NextResponse.json({ success: false });
   }
 }
