@@ -59,15 +59,15 @@ export default function Home() {
     });
 
     await fetch('/api/notify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        bookerName: formData.bookerName,
-        car: formData.car,
-        destination: formData.destination,
-        date: formData.useDate
-      })
-    });
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    bookerName: formData.bookerName,
+    car: formData.car,
+    destination: formData.destination,
+    date: formData.useDate
+  })
+});
 
     alert('จองรถสำเร็จ! 🎉');
 
