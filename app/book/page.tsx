@@ -165,13 +165,14 @@ export default function BookPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          bookerId:    form.bookerId,
           bookerName:  form.bookerName,
           car:         `${selectedCar!.name} (${selectedCar!.plate})`,
           destination: form.toLocation,
           date:        `${form.useDate} ${form.startTime}–${form.endTime}`,
         }),
       });
-
+      
       setSubmitted(true);
     } catch (e: any) {
       if (e?.message?.startsWith("CONFLICT:")) {

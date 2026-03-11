@@ -1,31 +1,19 @@
 // app/api/notify/route.ts
 import { NextResponse } from "next/server";
-import { db } from "../../../lib/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { bookerName, car, destination, date } = body;
+    // ✅ รับ bookerId เพิ่มเข้ามา
+    const { bookerId, bookerName, car, destination, date } = body;
 
-    console.log("📨 notify called:", { bookerName, car, destination, date });
+    console.log("📨 notify called:", { bookerId, bookerName, car, destination, date });
 
-    // ── หา userId จาก displayName ──
-    const q = query(
-      collection(db, "lineUsers"),
-      where("displayName", "==", bookerName),
-    );
-    const snap = await getDocs(q);
-
-    console.log("🔍 lineUsers found:", snap.size, "docs");
-
-    if (snap.empty) {
-      console.error("❌ No lineUser found for:", bookerName);
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    // ── ตรวจสอบว่ามี ID ส่งมาหรือไม่ ──
+    if (!bookerId) {
+      console.error("❌ No bookerId provided for:", bookerName);
+      return NextResponse.json({ error: "Missing bookerId" }, { status: 400 });
     }
-
-    const userId = snap.docs[0].data().userId;
-    console.log("✅ userId:", userId);
 
     // ── ส่ง LINE push message ──
     const token = process.env.LINE_ACCESS_TOKEN;
@@ -37,7 +25,7 @@ export async function POST(req: Request) {
     }
 
     const message = {
-      to: userId,
+      to: bookerId, // ✅ ใช้ bookerId ที่ได้มาส่งหาผู้ใช้โดยตรง ไม่ต้องเดาจากชื่อ
       messages: [
         {
           type: "text",
