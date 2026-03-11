@@ -188,7 +188,6 @@ export default function Dashboard() {
             ? <img src={user.pictureUrl} alt="" className="avatar" />
             : <div className="avatar-fallback">{user?.displayName?.charAt(0) || 'U'}</div>}
           <div>
-            <p style={{ fontSize: 11, color: '#94a3b8', margin: 0 }}>สวัสดี,</p>
             <p style={{ fontSize: 14, fontWeight: 700, color: '#1e3a5f', margin: 0 }}>
               {user?.displayName || 'พนักงาน'}
             </p>
