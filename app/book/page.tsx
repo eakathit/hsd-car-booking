@@ -27,13 +27,11 @@ async function getCarAvailability(
   );
   const snap = await getDocs(q);
 
-  // เริ่มต้นทุกคันว่าง
   const result: Record<string, { available: boolean; bookerName: string; startTime: string; endTime: string }> = {};
   for (const car of COMPANY_CARS) {
     result[car.id] = { available: true, bookerName: "", startTime: "", endTime: "" };
   }
 
-  // ทับซ้อน = newStart < existEnd AND newEnd > existStart
   for (const doc of snap.docs) {
     const b = doc.data() as Booking;
     if (startTime < b.endTime && endTime > b.startTime) {
@@ -72,18 +70,14 @@ export default function BookPage() {
   const [isSubmitting, setIsSubmitting]   = useState(false);
   const [submitted, setSubmitted]         = useState(false);
 
-  // availability map จาก Firestore (โหลดเมื่อ step 0 → 1)
   const [availability, setAvailability] = useState<
     Record<string, { available: boolean; bookerName: string; startTime: string; endTime: string }>
   >({});
 
   const [form, setForm] = useState({
     bookerId: "", bookerName: "", pictureUrl: "",
-    // step 0
     useDate: todayStr(), startTime: "08:30", endTime: "17:00",
-    // step 1
     carId: "",
-    // step 2
     fromLocation: "Haru", toLocation: "", purpose: "", driverName: "",
   });
 
@@ -110,35 +104,30 @@ export default function BookPage() {
   const set = (k: string, v: string) => setForm((f) => ({ ...f, [k]: v }));
   const selectedCar = COMPANY_CARS.find((c) => c.id === form.carId);
 
-  // ── Guards ──
   const ok0 = !!form.useDate && !!form.startTime && !!form.endTime && form.startTime < form.endTime;
   const ok1 = !!form.carId && availability[form.carId]?.available === true;
   const ok2 = !!form.toLocation && !!form.purpose && !!form.driverName;
 
-  // ── Step 0 → 1: query availability ──
   const goStep1 = async () => {
     setIsLoadingCars(true);
     try {
       const av = await getCarAvailability(form.useDate, form.startTime, form.endTime);
       setAvailability(av);
-      // reset car selection ถ้าคันที่เลือกไว้เต็ม
       if (form.carId && !av[form.carId]?.available) {
         set("carId", "");
       }
       setStep(1);
     } catch (e) {
       console.error(e);
-      setStep(1); // ถ้า query fail ให้ผ่าน
+      setStep(1);
     } finally {
       setIsLoadingCars(false);
     }
   };
 
-  // ── Submit ──
   const submit = async () => {
     setIsSubmitting(true);
     try {
-      // double-check ก่อน write
       const av = await getCarAvailability(form.useDate, form.startTime, form.endTime);
       if (!av[form.carId]?.available) {
         alert(`รถถูกจองแล้วโดย ${av[form.carId].bookerName} กรุณากลับไปเลือกรถใหม่`);
@@ -183,9 +172,7 @@ export default function BookPage() {
     }
   };
 
-  // ─────────────────────────────────────────────────
-  // Success screen
-  // ─────────────────────────────────────────────────
+  // ─── Success screen ───────────────────────────────
   if (submitted) return (
     <>
       <Styles />
@@ -220,9 +207,7 @@ export default function BookPage() {
     </>
   );
 
-  // ─────────────────────────────────────────────────
-  // Main form
-  // ─────────────────────────────────────────────────
+  // ─── Main form ────────────────────────────────────
   return (
     <>
       <Styles />
@@ -281,13 +266,9 @@ export default function BookPage() {
               </div>
             ) : (
               <>
-                {/* ══════════════════════════════════════
-                    STEP 0 — วันที่ & เวลา
-                ══════════════════════════════════════ */}
+                {/* ══ STEP 0 ══ */}
                 {step === 0 && (
                   <div className="step-in">
-
-                    {/* Booker chip */}
                     <div className="fg">
                       <label className="fl">ผู้จอง</label>
                       <div className="bk-row">
@@ -302,14 +283,12 @@ export default function BookPage() {
                       </div>
                     </div>
 
-                    {/* วันที่ใช้รถ */}
                     <div className="fg">
                       <label className="fl">📅 วันที่ใช้รถ *</label>
                       <input type="date" value={form.useDate} min={todayStr()}
                         onChange={(e) => set("useDate", e.target.value)} className="inp" />
                     </div>
 
-                    {/* เวลาออก / เวลาเข้า */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                       <div className="fg">
                         <label className="fl">🕐 เวลาออก *</label>
@@ -323,7 +302,6 @@ export default function BookPage() {
                       </div>
                     </div>
 
-                    {/* Duration badge */}
                     {ok0 && (
                       <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 12, padding: "10px 13px", marginBottom: 14 }}>
                         ⏱ <span style={{ color: "#15803d", fontWeight: 600, fontSize: 13 }}>
@@ -332,7 +310,6 @@ export default function BookPage() {
                       </div>
                     )}
 
-                    {/* เวลาผิด */}
                     {form.startTime && form.endTime && form.startTime >= form.endTime && (
                       <div className="err">⚠️ เวลาเข้าต้องมากกว่าเวลาออก</div>
                     )}
@@ -345,9 +322,7 @@ export default function BookPage() {
                   </div>
                 )}
 
-                {/* ══════════════════════════════════════
-                    STEP 1 — เลือกรถ (เห็นว่าง/เต็ม)
-                ══════════════════════════════════════ */}
+                {/* ══ STEP 1 — เลือกรถ (2 คอลัมน์) ══ */}
                 {step === 1 && (
                   <div className="step-in">
 
@@ -369,12 +344,17 @@ export default function BookPage() {
                     <div className="fg">
                       <label className="fl">เลือกรถยนต์ *</label>
 
-                      {/* ── 3-column vertical card grid ── */}
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
+                      {/* ── 2-column grid ── */}
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
                         {COMPANY_CARS.map((car) => {
                           const av     = availability[car.id];
                           const isFree = av?.available !== false;
                           const isSel  = form.carId === car.id;
+
+                          // สีตอนเลือก: ใช้สีหลักของ app (#1d4ed8) เป็นมาตรฐานเดียวทุกคัน
+                          const SEL_BORDER = "#1d4ed8";
+                          const SEL_BG     = "#eff6ff";
+                          const SEL_SHADOW = "0 0 0 3px rgba(29,78,216,.12), 0 6px 18px rgba(29,78,216,.14)";
 
                           return (
                             <div
@@ -382,19 +362,20 @@ export default function BookPage() {
                               onClick={() => isFree && set("carId", car.id)}
                               style={{
                                 display: "flex", flexDirection: "column",
-                                borderRadius: 14, overflow: "hidden",
-                                border: `2px solid ${isSel ? car.color : isFree ? "#e2e8f0" : "#fecaca"}`,
+                                borderRadius: 16, overflow: "hidden",
+                                border: `2px solid ${isSel ? SEL_BORDER : isFree ? "#e2e8f0" : "#fecaca"}`,
                                 cursor: isFree ? "pointer" : "not-allowed",
-                                background: isSel ? car.colorLight : isFree ? "white" : "#fff8f8",
-                                boxShadow: isSel ? `0 0 0 3px ${car.color}22, 0 4px 12px ${car.color}22` : "0 1px 6px rgba(0,0,0,.06)",
+                                background: isSel ? SEL_BG : isFree ? "white" : "#fff8f8",
+                                boxShadow: isSel ? SEL_SHADOW : "0 2px 8px rgba(0,0,0,.07)",
                                 transition: "all .2s",
                                 position: "relative",
                               }}
                             >
-                              {/* ── รูปรถ (บน) ── */}
+                              {/* รูปรถ */}
                               <div style={{
-                                width: "100%", aspectRatio: "1 / 1",
-                                background: isSel ? car.colorLight : isFree ? "#f1f5f9" : "#fee2e2",
+                                width: "100%",
+                                aspectRatio: "4 / 3",
+                                background: isSel ? "#dbeafe" : isFree ? "#f1f5f9" : "#fee2e2",
                                 display: "flex", alignItems: "center", justifyContent: "center",
                                 overflow: "hidden", position: "relative",
                               }}>
@@ -405,48 +386,63 @@ export default function BookPage() {
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).src = "https://cdn-icons-png.flaticon.com/512/3085/3085330.png";
                                     (e.target as HTMLImageElement).style.objectFit = "contain";
-                                    (e.target as HTMLImageElement).style.padding = "20px";
+                                    (e.target as HTMLImageElement).style.padding = "24px";
                                   }}
                                 />
 
-                                {/* เต็ม overlay */}
+                                {/* ไม่ว่าง overlay */}
                                 {!isFree && (
-                                  <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                    <span style={{ fontSize: 13, fontWeight: 700, color: "white", background: "#ef4444", borderRadius: 20, padding: "3px 10px", boxShadow: "0 2px 8px rgba(0,0,0,.3)" }}>เต็ม</span>
+                                  <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.38)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    <span style={{ fontSize: 15, fontWeight: 700, color: "white", background: "#ef4444", borderRadius: 20, padding: "4px 14px", boxShadow: "0 2px 8px rgba(0,0,0,.3)" }}>ไม่ว่าง</span>
                                   </div>
                                 )}
 
-                                {/* เลือกแล้ว checkmark */}
+                                {/* เลือกแล้ว checkmark — สีเดียวกันทุกคัน */}
                                 {isSel && (
-                                  <div style={{ position: "absolute", top: 6, right: 6, width: 22, height: 22, borderRadius: "50%", background: car.color, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 6px rgba(0,0,0,.2)" }}>
-                                    <span style={{ color: "white", fontSize: 11, fontWeight: 700 }}>✓</span>
+                                  <div style={{ position: "absolute", top: 8, right: 8, width: 26, height: 26, borderRadius: "50%", background: SEL_BORDER, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,.25)" }}>
+                                    <span style={{ color: "white", fontSize: 13, fontWeight: 700 }}>✓</span>
                                   </div>
                                 )}
                               </div>
 
-                              {/* ── ข้อมูล (ล่าง) ── */}
-                              <div style={{ padding: "8px 8px 10px", textAlign: "center" }}>
+                              {/* ข้อมูลรถ */}
+                              <div style={{ padding: "10px 12px 12px", textAlign: "center" }}>
+
                                 {/* ชื่อรุ่น */}
-                                <p style={{ fontSize: 11, fontWeight: 700, color: isFree ? "#1e293b" : "#94a3b8", margin: "0 0 2px", lineHeight: 1.3 }}>
-                                  {car.name.replace("Mitsubishi ", "").replace("Suzuki ", "")}
+                                <p style={{ fontSize: 13, fontWeight: 700, color: isFree ? "#1e293b" : "#94a3b8", margin: "0 0 4px" }}>
+  {car.name}
+</p>
+
+                                {/* ทะเบียน — มี label กำกับ */}
+                                <p style={{ fontSize: 11, margin: "0 0 8px", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                                  <span style={{ fontSize: 10, color: isFree ? "#64748b" : "#94a3b8", fontWeight: 600, letterSpacing: ".03em" }}>ทะเบียน</span>
+                                  <span style={{ fontWeight: 700, color: isFree ? "#64748b" : "#94a3b8" }}>{car.plate}</span>
                                 </p>
 
-                                {/* ทะเบียน */}
-                                <p style={{ fontSize: 10, color: "#94a3b8", margin: "0 0 5px", lineHeight: 1.3 }}>
-                                  {car.plate}
-                                </p>
-
-                                {/* badge ว่าง / เต็ม */}
+                                {/* badge ว่าง / ไม่ว่าง */}
                                 {isFree ? (
-                                  <span style={{ fontSize: 10, fontWeight: 700, color: "#16a34a", background: "#dcfce7", border: "1px solid #bbf7d0", borderRadius: 20, padding: "2px 8px" }}>
+                                  <span style={{
+                                    display: "inline-block",
+                                    fontSize: 12, fontWeight: 700,
+                                    color: "#16a34a", background: "#dcfce7",
+                                    border: "1px solid #bbf7d0",
+                                    borderRadius: 20, padding: "3px 12px",
+                                  }}>
                                     ✓ ว่าง
                                   </span>
                                 ) : (
                                   <div>
-                                    <span style={{ fontSize: 10, fontWeight: 700, color: "#ef4444", background: "#fee2e2", border: "1px solid #fecaca", borderRadius: 20, padding: "2px 8px", display: "block", marginBottom: 3 }}>
-                                      ✕ เต็ม
+                                    <span style={{
+                                      display: "inline-block",
+                                      fontSize: 12, fontWeight: 700,
+                                      color: "#ef4444", background: "#fee2e2",
+                                      border: "1px solid #fecaca",
+                                      borderRadius: 20, padding: "3px 12px",
+                                      marginBottom: 4,
+                                    }}>
+                                      ✕ ไม่ว่าง
                                     </span>
-                                    <p style={{ fontSize: 9, color: "#94a3b8", margin: 0, lineHeight: 1.4 }}>
+                                    <p style={{ fontSize: 11, color: "#94a3b8", margin: 0 }}>
                                       {av.startTime}–{av.endTime}
                                     </p>
                                   </div>
@@ -457,10 +453,9 @@ export default function BookPage() {
                         })}
                       </div>
 
-                      {/* ถ้าเลือกรถที่เต็ม แสดง info ว่าใครจอง */}
                       {form.carId && !availability[form.carId]?.available && (
                         <div className="err" style={{ marginTop: 10 }}>
-                          ❌ รถคันนี้ถูกจองแล้ว ({availability[form.carId].startTime}–{availability[form.carId].endTime}) โดย {availability[form.carId].bookerName}
+                          ❌ รถคันนี้ไม่ว่าง ({availability[form.carId].startTime}–{availability[form.carId].endTime}) โดย {availability[form.carId].bookerName}
                         </div>
                       )}
                     </div>
@@ -474,13 +469,9 @@ export default function BookPage() {
                   </div>
                 )}
 
-                {/* ══════════════════════════════════════
-                    STEP 2 — รายละเอียด
-                ══════════════════════════════════════ */}
+                {/* ══ STEP 2 ══ */}
                 {step === 2 && (
                   <div className="step-in">
-
-                    {/* Summary strip */}
                     <div style={{ display: "flex", alignItems: "center", gap: 10, background: selectedCar!.colorLight, border: `1px solid ${selectedCar!.color}44`, borderRadius: 12, padding: "10px 13px", marginBottom: 16 }}>
                       <div style={{ width: 8, height: 8, borderRadius: "50%", background: selectedCar!.color, flexShrink: 0 }} />
                       <div style={{ flex: 1 }}>
@@ -492,7 +483,6 @@ export default function BookPage() {
                       <button onClick={() => setStep(1)} style={{ background: "none", border: "none", cursor: "pointer", color: "#1d4ed8", fontSize: 11, fontWeight: 700, padding: 0 }}>แก้ไข</button>
                     </div>
 
-                    {/* จาก → ถึง */}
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                       <div className="fg">
                         <label className="fl">📍 จาก *</label>
@@ -522,7 +512,6 @@ export default function BookPage() {
                         placeholder="ชื่อผู้ขับ" className="inp" />
                     </div>
 
-                    {/* Summary box */}
                     {ok2 && (
                       <div className="sum-box" style={{ marginBottom: 16 }}>
                         <p style={{ fontSize: 11, fontWeight: 700, color: "#1d4ed8", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 10 }}>📌 สรุปการจอง</p>
@@ -546,7 +535,7 @@ export default function BookPage() {
                     <div style={{ display: "flex", gap: 8 }}>
                       <button className="btn-sec" onClick={() => setStep(1)}>← ย้อน</button>
                       <button className="btn-primary btn-green" style={{ flex: 1 }} disabled={isSubmitting || !ok2} onClick={submit}>
-                        {isSubmitting ? <><span className="spin-sm" /> บันทึก…</> : "✅ ยืนยันการจอง"}
+                        {isSubmitting ? <><span className="spin-sm" /> บันทึก…</> : "ยืนยันการจอง"}
                       </button>
                     </div>
                   </div>
