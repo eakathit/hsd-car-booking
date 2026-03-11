@@ -4,7 +4,7 @@ export const COMPANY_CARS = [
   {
     id: "car-mirage",
     name: "Mitsubishi Mirage",
-    short: "Mirage",
+    short: "Mitsubishi Mirage",
     plate: "7 กร 1247",
     color: "#2563eb",      // blue
     colorLight: "#dbeafe",
@@ -13,7 +13,7 @@ export const COMPANY_CARS = [
   {
     id: "car-carry1",
     name: "Suzuki Carry",
-    short: "Carry #1",
+    short: "Suzuki Carry",
     plate: "3 ฒฉ 1209",
     color: "#7c3aed",      // purple
     colorLight: "#ede9fe",
@@ -22,7 +22,7 @@ export const COMPANY_CARS = [
   {
     id: "car-carry2",
     name: "Suzuki Carry",
-    short: "Carry #2",
+    short: "Suzuki Carry",
     plate: "1 ฒต 4165",
     color: "#0891b2",      // cyan
     colorLight: "#cffafe",
