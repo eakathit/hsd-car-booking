@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── bookings ──────────────────────────────────────────────
+    match /bookings/{bookingId} {
+      // อ่านได้ทุกคน (ใช้ใน dashboard / queue)
+      allow read: if true;
+
+      // สร้างได้เฉพาะ request ที่มีข้อมูลครบ
+      allow create: if request.resource.data.keys().hasAll([
+        'carId', 'carName', 'carPlate',
+        'bookerId', 'bookerName',
+        'driverName', 'fromLocation', 'toLocation', 'purpose',
+        'useDate', 'startTime', 'endTime', 'status'
+      ])
+      && request.resource.data.status == 'booked'
+      && request.resource.data.useDate is string
+      && request.resource.data.startTime < request.resource.data.endTime;
+
+      // อัพเดตได้เฉพาะ field status (cancel/active/complete)
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['status', 'fuel']);
+
+      // ลบไม่ได้ (ใช้ cancel แทน)
+      allow delete: if false;
+    }
+
+    // ── lineUsers ─────────────────────────────────────────────
+    match /lineUsers/{userId} {
+        allow read:  if true;
+        allow write: if true;
+    }
+  }
+}

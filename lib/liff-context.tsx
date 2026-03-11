@@ -1,8 +1,11 @@
 // lib/liff-context.tsx
 // Singleton LIFF provider — init ครั้งเดียวตลอด session
+// ✅ บันทึก userId ลง Firestore อัตโนมัติตอนเปิดแอป
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { db } from "./firebase";
+import { doc, setDoc } from "firebase/firestore";
 import type { UserProfile } from "../types";
 
 interface LiffContextValue {
@@ -45,12 +48,26 @@ export function LiffProvider({ children }: { children: ReactNode }) {
 
         if (liff.isLoggedIn()) {
           const p = await liff.getProfile();
+
           _user = {
-            userId: p.userId,
+            userId:      p.userId,
             displayName: p.displayName,
-            pictureUrl: p.pictureUrl,
+            pictureUrl:  p.pictureUrl,
           };
           _isLoggedIn = true;
+
+          // ✅ บันทึก userId + displayName ลง Firestore ทันทีที่เปิดแอป
+          // ใช้ merge: true เพื่ออัพเดตชื่อถ้าเปลี่ยน ไม่ overwrite ข้อมูลเก่า
+          await setDoc(
+            doc(db, "lineUsers", p.userId),
+            {
+              userId:      p.userId,
+              displayName: p.displayName,
+              updatedAt:   new Date().toISOString(),
+            },
+            { merge: true }
+          );
+
         } else {
           liff.login();
           return; // redirect — ไม่ต้อง setReady
