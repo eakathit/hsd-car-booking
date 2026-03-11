@@ -3,12 +3,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import liff from '@line/liff';
 import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { COMPANY_CARS } from '../lib/cars';  // ✅ ข้อมูลรถถูกต้อง
-import type { UserProfile, Booking } from '../types';
+import { COMPANY_CARS } from '../lib/cars';
+import type { Booking } from '../types';
 import BottomNav from './components/BottomNav';
+import { useLiff } from '../lib/liff-context'; // ✅ ใช้ context แทน init เอง
 
 // ── Timeline config ──
 const DAY_START  = 7 * 60;
@@ -34,27 +34,12 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function Dashboard() {
-  const [user, setUser]             = useState<UserProfile | null>(null);
-  const [isLiffReady, setIsLiffReady] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(todayStr());
-  const [bookings, setBookings]     = useState<Booking[]>([]);
-  const [loading, setLoading]       = useState(true);
+  // ✅ ดึง user จาก LiffProvider ที่ init ไว้แล้วใน layout — ไม่ init ซ้ำ
+  const { user, isReady } = useLiff();
 
-  // LIFF init
-  useEffect(() => {
-    (async () => {
-      try {
-        await liff.init({ liffId: '2009402149-lV41Nacx' });
-        if (liff.isLoggedIn()) {
-          const p = await liff.getProfile();
-          setUser({ userId: p.userId, displayName: p.displayName, pictureUrl: p.pictureUrl });
-        } else {
-          liff.login();
-        }
-      } catch (e) { console.error('LIFF error', e); }
-      finally { setIsLiffReady(true); }
-    })();
-  }, []);
+  const [selectedDate, setSelectedDate] = useState(todayStr());
+  const [bookings, setBookings]         = useState<Booking[]>([]);
+  const [loading, setLoading]           = useState(true);
 
   // Real-time bookings
   useEffect(() => {
@@ -72,10 +57,11 @@ export default function Dashboard() {
     return () => unsub();
   }, [selectedDate]);
 
-  if (!isLiffReady) {
+  // ✅ ใช้ isReady จาก context — ไม่ต้องมี state ของตัวเองอีกแล้ว
+  if (!isReady) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', background: '#f0f4f8' }}>
-        <p style={{ color: '#94a3b8', fontFamily: 'Sarabun,sans-serif' }}>กำลังซิงค์ข้อมูลกับ LINE…</p>
+        <p style={{ color: '#94a3b8', fontFamily: 'Sarabun,sans-serif' }}>กำลังโหลด…</p>
       </div>
     );
   }
@@ -124,14 +110,12 @@ export default function Dashboard() {
         }
         .date-input:focus { border-color: #1d4ed8; box-shadow: 0 0 0 3px rgba(29,78,216,0.1); }
 
-        /* Car row */
         .car-row { margin-bottom: 18px; }
         .car-label {
           font-size: 12px; font-weight: 700; color: #475569;
           margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
         }
 
-        /* Timeline */
         .timeline-wrap {
           position: relative; height: 36px;
           background: #f1f5f9; border-radius: 8px; overflow: visible;
@@ -158,26 +142,12 @@ export default function Dashboard() {
           text-align: center; line-height: 36px;
         }
 
-        /* Booking list */
         .booking-list-item {
           display: flex; align-items: flex-start; gap: 10px;
           padding: 10px 0; border-bottom: 1px solid #f1f5f9;
         }
         .booking-list-item:last-child { border-bottom: none; }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
-
-        /* FAB */
-        .fab { position: fixed; bottom: 16px; left: 16px; right: 16px; max-width: 440px; margin: 0 auto; }
-        .fab-btn {
-          display: block; width: 100%;
-          background: linear-gradient(135deg,#1d4ed8,#1e3a5f);
-          color: white; text-align: center; font-weight: 700;
-          font-family: 'Prompt',sans-serif; font-size: 15px;
-          padding: 16px; border-radius: 14px;
-          box-shadow: 0 6px 20px rgba(29,78,216,0.35);
-          text-decoration: none; transition: transform .15s;
-        }
-        .fab-btn:active { transform: scale(0.97); }
       `}</style>
 
       <div className="page">
@@ -206,7 +176,6 @@ export default function Dashboard() {
 
           {/* ── Timeline card ── */}
           <div className="card">
-            {/* Title row + date picker */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
               <p className="card-title">🗓️ สถานะรถ {isToday ? '(วันนี้)' : ''}</p>
               <input
@@ -217,7 +186,6 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Thai date */}
             <p style={{ fontSize: 12, color: '#64748b', marginBottom: 16 }}>
               {formatThDate(selectedDate)}
             </p>
@@ -227,12 +195,10 @@ export default function Dashboard() {
                 กำลังโหลด…
               </p>
             ) : (
-              // ✅ COMPANY_CARS จาก lib/cars.ts — ชื่อ + ทะเบียนถูกต้อง
               COMPANY_CARS.map((car) => {
                 const carBookings = bookings.filter((b) => b.carId === car.id);
                 return (
                   <div key={car.id} className="car-row">
-                    {/* Car label row */}
                     <div className="car-label">
                       <span style={{
                         width: 10, height: 10, borderRadius: '50%',
@@ -249,7 +215,6 @@ export default function Dashboard() {
                       )}
                     </div>
 
-                    {/* Timeline bar */}
                     <div className="timeline-wrap">
                       {carBookings.length === 0 && (
                         <div className="no-booking">— ว่างทั้งวัน —</div>
@@ -276,7 +241,6 @@ export default function Dashboard() {
                         );
                       })}
 
-                      {/* Hour markers */}
                       {HOUR_MARKS.map((h) => (
                         <span key={h} className="timeline-hour" style={{ left: pct(h * 60) }}>
                           {h}
@@ -333,9 +297,7 @@ export default function Dashboard() {
 
         </div>
 
-        {/* ── FAB ── */}
         <BottomNav />
-
       </div>
     </>
   );
