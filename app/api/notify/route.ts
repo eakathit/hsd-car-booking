@@ -1,49 +1,77 @@
-import { NextResponse } from 'next/server';
-import { db } from '../../../lib/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+// app/api/notify/route.ts
+import { NextResponse } from "next/server";
+import { db } from "../../../lib/firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { bookerName, car, destination, date } = body;
-
-  const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN;
-
   try {
-    // ดึง userId จาก Firebase ที่เก็บตอน Add Bot
+    const body = await req.json();
+    const { bookerName, car, destination, date } = body;
+
+    console.log("📨 notify called:", { bookerName, car, destination, date });
+
+    // ── หา userId จาก displayName ──
     const q = query(
-      collection(db, 'lineUsers'),
-      where('displayName', '==', bookerName)
+      collection(db, "lineUsers"),
+      where("displayName", "==", bookerName),
     );
-    const snapshot = await getDocs(q);
-    
-    if (snapshot.empty) {
-      console.log('❌ ไม่พบ userId ของ:', bookerName);
-      return NextResponse.json({ success: false, error: 'User not found' });
+    const snap = await getDocs(q);
+
+    console.log("🔍 lineUsers found:", snap.size, "docs");
+
+    if (snap.empty) {
+      console.error("❌ No lineUser found for:", bookerName);
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const userId = snapshot.docs[0].data().userId;
+    const userId = snap.docs[0].data().userId;
+    console.log("✅ userId:", userId);
 
-    // Push หาคนนั้น
-    const response = await fetch('https://api.line.me/v2/bot/message/push', {
-      method: 'POST',
+    // ── ส่ง LINE push message ──
+    const token = process.env.LINE_ACCESS_TOKEN;
+    console.log("🔑 LINE_ACCESS_TOKEN exists:", !!token);
+
+    if (!token) {
+      console.error("❌ LINE_ACCESS_TOKEN is not set");
+      return NextResponse.json({ error: "Missing token" }, { status: 500 });
+    }
+
+    const message = {
+      to: userId,
+      messages: [
+        {
+          type: "text",
+          text: `🚗 จองรถสำเร็จ!\n\n` +
+                `👤 ผู้จอง: ${bookerName}\n` +
+                `🚙 รถ: ${car}\n` +
+                `📍 ปลายทาง: ${destination}\n` +
+                `📅 วันเวลา: ${date}`,
+        },
+      ],
+    };
+
+    const res = await fetch("https://api.line.me/v2/bot/message/push", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${LINE_ACCESS_TOKEN}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({
-        to: userId,
-        messages: [{
-          type: 'text',
-          text: `🚗 ยืนยันการจองรถสำเร็จ!\n\nผู้จอง: ${bookerName}\nรถ: ${car}\nไปที่: ${destination}\nวันที่: ${date}`
-        }]
-      })
+      body: JSON.stringify(message),
     });
 
-    const result = await response.text();
-    console.log('📬 LINE response:', response.status, result);
+    const resBody = await res.json();
+    console.log("📤 LINE push response:", res.status, JSON.stringify(resBody));
 
-    return NextResponse.json({ success: response.ok });
-  } catch (error) {
-    return NextResponse.json({ success: false, error: String(error) });
+    if (!res.ok) {
+      console.error("❌ LINE push failed:", resBody);
+      return NextResponse.json({ error: resBody }, { status: 500 });
+    }
+
+    console.log("✅ LINE notify sent successfully");
+    return NextResponse.json({ status: "ok" });
+
+  } catch (err) {
+    console.error("❌ notify error:", err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
