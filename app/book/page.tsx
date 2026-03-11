@@ -4,8 +4,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  collection, addDoc, getDocs,
-  query, where, serverTimestamp,
+  collection, getDocs, query, where,
+  serverTimestamp, runTransaction, doc,
+  addDoc,
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { COMPANY_CARS } from "../../lib/cars";
@@ -126,51 +127,82 @@ export default function BookPage() {
   };
 
   const submit = async () => {
-    setIsSubmitting(true);
-    try {
-      const av = await getCarAvailability(form.useDate, form.startTime, form.endTime);
-      if (!av[form.carId]?.available) {
-        alert(`รถถูกจองแล้วโดย ${av[form.carId].bookerName} กรุณากลับไปเลือกรถใหม่`);
-        setAvailability(av);
-        setForm((f) => ({ ...f, carId: "" }));
-        setStep(1);
-        return;
+  setIsSubmitting(true);
+  try {
+    const bookingsRef = collection(db, "bookings");
+
+    await runTransaction(db, async (tx) => {
+      // 1. อ่านข้อมูลการจองในช่วงเวลาเดียวกันภายใน transaction
+      const q = query(
+        bookingsRef,
+        where("useDate",  "==", form.useDate),
+        where("carId",    "==", form.carId),
+        where("status",   "in", ["booked", "active"]),
+      );
+      const snap = await getDocs(q); // ⚠️ getDocs inside tx (read-then-write)
+
+      // 2. ตรวจ overlap
+      const conflict = snap.docs.find((d) => {
+        const b = d.data();
+        return form.startTime < b.endTime && form.endTime > b.startTime;
+      });
+
+      if (conflict) {
+        const b = conflict.data();
+        throw new Error(`CONFLICT:${b.bookerName}:${b.startTime}:${b.endTime}`);
       }
-      await addDoc(collection(db, "bookings"), {
-        carId: form.carId,
-        carName: selectedCar!.name,
-        carPlate: selectedCar!.plate,
-        bookerId: form.bookerId,
+
+      // 3. เขียนการจองใหม่
+      const newRef = doc(bookingsRef); // สร้าง ref ก่อน
+      tx.set(newRef, {
+        carId:         form.carId,
+        carName:       selectedCar!.name,
+        carPlate:      selectedCar!.plate,
+        bookerId:      form.bookerId,
+        bookerName:    form.bookerName,
+        bookedAt:      new Date().toISOString(),
+        driverName:    form.driverName,
+        fromLocation:  form.fromLocation,
+        toLocation:    form.toLocation,
+        purpose:       form.purpose,
+        useDate:       form.useDate,
+        startTime:     form.startTime,
+        endTime:       form.endTime,
+        status:        "booked",
+        createdAt:     serverTimestamp(),
+      });
+    });
+
+    // 4. ส่ง LINE notify (ทำนอก transaction ได้)
+    await fetch("/api/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         bookerName: form.bookerName,
-        bookedAt: new Date().toISOString(),
-        driverName: form.driverName,
-        fromLocation: form.fromLocation,
-        toLocation: form.toLocation,
-        purpose: form.purpose,
-        useDate: form.useDate,
-        startTime: form.startTime,
-        endTime: form.endTime,
-        status: "booked",
-        createdAt: serverTimestamp(),
-      });
-      await fetch("/api/notify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bookerName: form.bookerName,
-          car: `${selectedCar!.name} (${selectedCar!.plate})`,
-          destination: form.toLocation,
-          date: `${form.useDate} ${form.startTime}–${form.endTime}`,
-        }),
-      });
-      setSubmitted(true);
-    } catch (e) {
+        car:        `${selectedCar!.name} (${selectedCar!.plate})`,
+        destination: form.toLocation,
+        date:       `${form.useDate} ${form.startTime}–${form.endTime}`,
+      }),
+    });
+
+    setSubmitted(true);
+  } catch (e: any) {
+    if (e?.message?.startsWith("CONFLICT:")) {
+      const [, booker, start, end] = e.message.split(":");
+      alert(`❌ รถถูกจองแล้วโดย ${booker} (${start}–${end})\nกรุณากลับไปเลือกรถหรือช่วงเวลาใหม่`);
+      // รีเฟรช availability แล้วกลับ step 1
+      const av = await getCarAvailability(form.useDate, form.startTime, form.endTime);
+      setAvailability(av);
+      setForm((f) => ({ ...f, carId: "" }));
+      setStep(1);
+    } else {
       console.error(e);
       alert("เกิดข้อผิดพลาด กรุณาลองใหม่");
-    } finally {
-      setIsSubmitting(false);
     }
-  };
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   // ─── Success screen ───────────────────────────────
   if (submitted) return (

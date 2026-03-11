@@ -1,18 +1,19 @@
-// src/firebase.ts
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
-// เอา config ของคุณมาใส่ตรงนี้ครับ
 const firebaseConfig = {
-  apiKey: "AIzaSyA8nsuAjHA5lATszkN4yuWUGyXJthgeVn0",
-  authDomain: "haru-carbooking.firebaseapp.com",
-  projectId: "haru-carbooking",
-  storageBucket: "haru-carbooking.firebasestorage.app",
-  messagingSenderId: "184742891217",
-  appId: "1:184742891217:web:e5fddda202e7c7d9977ff0",
-  measurementId: "G-2BP0R5NLC7"
+  apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// ป้องกัน "Firebase App named '[DEFAULT]' already exists"
+// ที่เกิดจาก Next.js Hot Reload / Fast Refresh
+const app = getApps().length === 0
+  ? initializeApp(firebaseConfig)
+  : getApps()[0];
+
 export const db = getFirestore(app);
