@@ -1,4 +1,6 @@
 // app/api/notify/route.ts
+// ✅ ส่งหาทุก userId ที่มี displayName ตรงกัน — ป้องกันส่งผิดอัน
+
 import { NextResponse } from "next/server";
 import { db } from "../../../lib/firebase";
 import { collection, query, where, getDocs } from "firebase/firestore";
@@ -10,7 +12,6 @@ export async function POST(req: Request) {
 
     console.log("📨 notify called:", { bookerName, car, destination, date });
 
-    // ── หา userId จาก displayName ──
     const q = query(
       collection(db, "lineUsers"),
       where("displayName", "==", bookerName),
@@ -24,47 +25,46 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const userId = snap.docs[0].data().userId;
-    console.log("✅ userId:", userId);
-
-    // ── ส่ง LINE push message ──
     const token = process.env.LINE_ACCESS_TOKEN;
-    console.log("🔑 LINE_ACCESS_TOKEN exists:", !!token);
-
     if (!token) {
       console.error("❌ LINE_ACCESS_TOKEN is not set");
       return NextResponse.json({ error: "Missing token" }, { status: 500 });
     }
 
-    const message = {
-      to: userId,
-      messages: [
-        {
-          type: "text",
-          text: `🚗 จองรถสำเร็จ!\n\n` +
-                `👤 ผู้จอง: ${bookerName}\n` +
-                `🚙 รถ: ${car}\n` +
-                `📍 ปลายทาง: ${destination}\n` +
-                `📅 วันเวลา: ${date}`,
-        },
-      ],
-    };
+    const messageText =
+      `🚗 จองรถสำเร็จ!\n\n` +
+      `👤 ผู้จอง: ${bookerName}\n` +
+      `🚙 รถ: ${car}\n` +
+      `📍 ปลายทาง: ${destination}\n` +
+      `📅 วันเวลา: ${date}`;
 
-    const res = await fetch("https://api.line.me/v2/bot/message/push", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(message),
-    });
+    // ── ส่งหาทุก userId — อันไหน follow บอทไว้จะได้รับ ──
+    const results = await Promise.allSettled(
+      snap.docs.map(async (d) => {
+        const userId = d.data().userId;
+        const res = await fetch("https://api.line.me/v2/bot/message/push", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            to: userId,
+            messages: [{ type: "text", text: messageText }],
+          }),
+        });
+        const resBody = await res.json();
+        console.log(`📤 userId ${userId}: ${res.status}`, JSON.stringify(resBody));
+        return { userId, status: res.status };
+      })
+    );
 
-    const resBody = await res.json();
-    console.log("📤 LINE push response:", res.status, JSON.stringify(resBody));
+    const anySuccess = results.some(
+      (r) => r.status === "fulfilled" && r.value.status === 200
+    );
 
-    if (!res.ok) {
-      console.error("❌ LINE push failed:", resBody);
-      return NextResponse.json({ error: resBody }, { status: 500 });
+    if (!anySuccess) {
+      return NextResponse.json({ error: "All push failed" }, { status: 500 });
     }
 
     console.log("✅ LINE notify sent successfully");
