@@ -51,6 +51,39 @@ function getDuration(s: string, e: string) {
   return h > 0 ? `${h} ชม. ${r} นาที` : `${r} นาที`;
 }
 
+function ImgWithSkeleton({ src, alt }: { src: string; alt: string }) {
+  const [loaded, setLoaded] = useState(false);
+  const [error,  setError]  = useState(false);
+  return (
+    <>
+      {/* Skeleton — แสดงขณะรูปยังโหลดไม่เสร็จ */}
+      {!loaded && !error && (
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%)",
+          backgroundSize: "200% 100%",
+          animation: "shimmer 1.4s infinite",
+        }} />
+      )}
+      {error ? (
+        <div style={{ fontSize: 36, position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>🚗</div>
+      ) : (
+        <img
+          src={src}
+          alt={alt}
+          onLoad={() => setLoaded(true)}
+          onError={() => { setError(true); setLoaded(true); }}
+          style={{
+            width: "100%", height: "100%", objectFit: "cover", display: "block",
+            opacity: loaded ? 1 : 0,
+            transition: "opacity 0.25s ease",
+          }}
+        />
+      )}
+    </>
+  );
+}
+
 export default function BookPage() {
   const router = useRouter();
   const { user, isReady } = useLiff();
@@ -64,7 +97,7 @@ export default function BookPage() {
 
   const [form, setForm] = useState({
     bookerId: "", bookerName: "", pictureUrl: "",
-    useDate: todayStr(), startTime: "08:30", endTime: "17:00",
+    useDate: todayStr(), startTime: "08:30", endTime: "17:30",
     carId: "",
     fromLocation: "Haru", toLocation: "", purpose: "", driverName: "",
   });
@@ -190,7 +223,7 @@ export default function BookPage() {
           <div className="sum-box" style={{ marginBottom: 20, textAlign: "left" }}>
             {([
               ["🚗","รถ",`${selectedCar.name} (${selectedCar.plate})`],
-              ["📅","วันที่",fmtDate(form.useDate)],
+              ["📅","วันที",fmtDate(form.useDate)],
               ["🕐","เวลา",`${form.startTime} – ${form.endTime}`],
               ["📍","จาก → ถึง",`${form.fromLocation} → ${form.toLocation}`],
               ["📋","สำหรับ",form.purpose],
@@ -321,8 +354,7 @@ export default function BookPage() {
                           <div key={car.id} onClick={() => isFree && set("carId",car.id)} style={{ display:"flex",flexDirection:"column",borderRadius:16,overflow:"hidden",border:`2px solid ${isSel?SEL_BORDER:isFree?"#e2e8f0":"#fecaca"}`,cursor:isFree?"pointer":"not-allowed",background:isSel?SEL_BG:isFree?"white":"#fff8f8",boxShadow:isSel?SEL_SHADOW:"0 2px 8px rgba(0,0,0,.07)",transition:"all .2s",position:"relative" }}>
                             <div style={{ width:"100%",aspectRatio:"4/3",background:isSel?"#dbeafe":isFree?"#f1f5f9":"#fee2e2",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",position:"relative" }}>
                               {car.imageUrl ? (
-                                <img src={car.imageUrl} alt={car.name} style={{ width:"100%",height:"100%",objectFit:"cover",display:"block" }}
-                                  onError={(e) => { (e.target as HTMLImageElement).src="https://cdn-icons-png.flaticon.com/512/3085/3085330.png"; (e.target as HTMLImageElement).style.objectFit="contain"; (e.target as HTMLImageElement).style.padding="24px"; }} />
+                                <ImgWithSkeleton src={car.imageUrl} alt={car.name} />
                               ) : (
                                 <div style={{ fontSize:40 }}>🚗</div>
                               )}
@@ -430,6 +462,7 @@ function Styles() {
       .spin{width:20px;height:20px;border:2px solid #e2e8f0;border-top-color:#1d4ed8;border-radius:50%;animation:spin .7s linear infinite}
       .spin-sm{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
       @keyframes spin{to{transform:rotate(360deg)}}
+      @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
       @keyframes popIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
     `}</style>
   );
