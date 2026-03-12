@@ -4,10 +4,8 @@ service cloud.firestore {
 
     // ── bookings ──────────────────────────────────────────────
     match /bookings/{bookingId} {
-      // อ่านได้ทุกคน (ใช้ใน dashboard / queue)
       allow read: if true;
 
-      // สร้างได้เฉพาะ request ที่มีข้อมูลครบ
       allow create: if request.resource.data.keys().hasAll([
         'carId', 'carName', 'carPlate',
         'bookerId', 'bookerName',
@@ -18,18 +16,26 @@ service cloud.firestore {
       && request.resource.data.useDate is string
       && request.resource.data.startTime < request.resource.data.endTime;
 
-      // อัพเดตได้เฉพาะ field status (cancel/active/complete)
       allow update: if request.resource.data.diff(resource.data).affectedKeys()
                  .hasOnly(['status', 'fuel', 'cancelledAt', 'cancelledBy']);
 
-      // ลบไม่ได้ (ใช้ cancel แทน)
       allow delete: if false;
     }
 
     // ── lineUsers ─────────────────────────────────────────────
     match /lineUsers/{userId} {
-        allow read:  if true;
-        allow write: if true;
+      allow read:  if true;
+      allow write: if true;
     }
+
+    // ── cars ──────────────────────────────────────────────────
+    match /cars/{carId} {
+      // อ่านได้ทุกคน (ใช้ใน booking page)
+      allow read: if true;
+      // เขียนได้เฉพาะ admin — ตรวจจาก lineUsers
+      allow write: if get(/databases/$(database)/documents/lineUsers/$(request.auth.uid)).data.role == "admin"
+                   || true; // ← ลบบรรทัดนี้ออกเมื่อเปิด Auth จริง
+    }
+
   }
 }

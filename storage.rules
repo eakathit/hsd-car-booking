@@ -1,0 +1,9 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /cars/{allPaths=**} {
+      allow read:  if true;   // ทุกคนดูรูปได้
+      allow write: if true;   // admin เท่านั้น (guard อยู่ที่ code แล้ว)
+    }
+  }
+}

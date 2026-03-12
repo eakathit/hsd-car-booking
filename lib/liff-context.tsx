@@ -81,14 +81,13 @@ export function LiffProvider({ children }: { children: ReactNode }) {
     }
 
     _initPromise = (async () => {
-      // ⚠️ DEV ONLY
+      // ⚠️ DEV ONLY — hardcode admin เพื่อทดสอบ localhost
       if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-        const role = await fetchRole("dev-user-id");
-        _user = { userId: "dev-user-id", displayName: "eakarthit", pictureUrl: "", role };
+        _user = { userId: "dev-user-id", displayName: "eakarthit", pictureUrl: "", role: "admin" };
         _isLoggedIn = true;
         setUser(_user);
         setIsLoggedIn(true);
-        setIsAdmin(role === "admin");
+        setIsAdmin(true);
         setIsReady(true);
         return;
       }
