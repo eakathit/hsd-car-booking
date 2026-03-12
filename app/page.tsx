@@ -111,10 +111,13 @@ export default function Dashboard() {
         .date-input:focus { border-color: #1d4ed8; box-shadow: 0 0 0 3px rgba(29,78,216,0.1); }
 
         .car-row { margin-bottom: 18px; }
+        
         .car-label {
-          font-size: 12px; font-weight: 700; color: #475569;
-          margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
-        }
+  font-size: 12px; font-weight: 700; color: #475569;
+  margin-bottom: 6px; display: flex; align-items: center; gap: 6px;
+  line-height: 1;
+}
+.car-label span { vertical-align: middle; }
 
         .timeline-wrap {
           position: relative; height: 36px;

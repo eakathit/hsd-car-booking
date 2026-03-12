@@ -1,52 +1,46 @@
-// types/index.ts — updated to match paper log (PDF)
+// types/index.ts
+
+export type UserRole = "admin" | "employee";
 
 export interface UserProfile {
   userId: string;
   displayName: string;
   pictureUrl?: string;
+  role?: UserRole;
 }
 
 export interface Car {
   id: string;
-  name: string;      // ชื่อรุ่น
-  plate: string;     // ทะเบียน
-  model: string;     // ชื่อย่อ (MIRAGS, VIOS, CITY …)
+  name: string;
+  plate: string;
+  model: string;
   imageUrl: string;
   badge: string;
 }
 
-/**
- * Booking — ตรงกับ columns ในสมุดบันทึกรถบริษัท (PDF)
- *
- * วันที่จอง  | ผู้จอง | เวลาที่จอง | จาก | ถึง | สำหรับ
- * วันที่ใช้  | เวลาออก | เวลาเข้า | ผู้ใช้รถ | น้ำมัน
- */
 export interface Booking {
   id?: string;
 
-  // ── รถ ──────────────────────────────
   carId: string;
-  carName: string;   // e.g. "Mitsubishi Mirage"
-  carPlate: string;  // e.g. "7ทศ1247"
+  carName: string;
+  carPlate: string;
 
-  // ── ผู้จอง (LINE profile) ────────────
   bookerId: string;
   bookerName: string;
-  bookedAt?: string;   // ISO timestamp เวลาที่กด "ยืนยัน"
+  bookedAt?: string;
 
-  // ── รายละเอียดเดินทาง ────────────────
-  driverName: string;     // ผู้ใช้รถ (อาจต่างจาก booker)
-  fromLocation: string;   // จาก  (default = "Haru")
-  toLocation: string;     // ถึง
-  purpose: string;        // สำหรับ
+  driverName: string;
+  fromLocation: string;
+  toLocation: string;
+  purpose: string;
 
-  // ── ตารางเวลา ────────────────────────
-  useDate: string;    // วันที่ใช้  YYYY-MM-DD
-  startTime: string;  // เวลาออก   HH:mm
-  endTime: string;    // เวลาเข้า  HH:mm
+  useDate: string;
+  startTime: string;
+  endTime: string;
 
-  // ── ข้อมูลเพิ่มเติม ──────────────────
-  fuel?: string;      // น้ำมัน (กรอกตอนคืนรถ)
-  status: 'booked' | 'active' | 'completed' | 'cancelled';
-  createdAt?: any;    // Firestore serverTimestamp
+  fuel?: string;
+  status: "booked" | "active" | "completed" | "cancelled";
+  createdAt?: any;
+  cancelledAt?: string;
+  cancelledBy?: string;
 }
