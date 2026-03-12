@@ -62,8 +62,15 @@ export default function QueuePage() {
     <><Styles />
       <div className="page">
         <header className="header">
-          <div><p className="h-sub">HARU SYSTEM DEVELOPMENT</p><h1 className="h-title">📋 ตารางคิวรถ</h1></div>
-        </header>
+  <div style={{ display:"flex",alignItems:"center",gap:10 }}>
+    <img src="/logo.jpg" alt="" style={{ width:34,height:34,borderRadius:8,objectFit:"cover",flexShrink:0 }}
+      onError={(e) => { (e.target as HTMLImageElement).style.display="none"; }} />
+    <div style={{ marginLeft:2 }}>
+      <p className="h-sub">HARU SYSTEM DEVELOPMENT</p>
+      <h1 className="h-title">ตารางคิวรถ</h1>
+    </div>
+  </div>
+</header>
 
         <div className="wrap">
           <div className="filter-bar">
@@ -152,7 +159,7 @@ function Styles() {
       *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
       body,*{font-family:'Sarabun',sans-serif}
       .page{background:#f0f4f8;min-height:100vh}
-      .header{background:white;padding:12px 16px;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:30;box-shadow:0 1px 8px rgba(0,0,0,.06)}
+      .header{background:white;padding:12px 16px;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:30;box-shadow:0 1px 8px rgba(0,0,0,.06);display:flex;align-items:center}
       .h-sub{font-size:10px;color:#94a3b8;margin:0}.h-title{font-size:16px;font-weight:700;color:#1e3a5f;margin:0;font-family:'Prompt',sans-serif}
       .wrap{padding:14px;max-width:480px;margin:0 auto}
       .filter-bar{display:flex;gap:8px;margin-bottom:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}

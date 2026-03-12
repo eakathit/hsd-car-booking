@@ -70,7 +70,8 @@ export default function Dashboard() {
         .card-title{font-family:'Prompt',sans-serif;font-size:14px;font-weight:700;color:#1e3a5f;margin-bottom:0}
         .date-input{border:1.5px solid #e2e8f0;border-radius:10px;padding:8px 12px;font-size:13px;color:#1e293b;background:#f8fafc;outline:none;font-family:'Sarabun',sans-serif}
         .date-input:focus{border-color:#1d4ed8;box-shadow:0 0 0 3px rgba(29,78,216,0.1)}
-        .car-row{margin-bottom:18px}
+        .car-row{margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid #f1f5f9}
+        .car-row:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
         .car-label{font-size:12px;font-weight:700;color:#475569;margin-bottom:6px;display:flex;align-items:center;gap:6px;line-height:1}
         .car-label span{vertical-align:middle}
         .timeline-wrap{position:relative;height:36px;background:#f1f5f9;border-radius:8px;overflow:visible}
