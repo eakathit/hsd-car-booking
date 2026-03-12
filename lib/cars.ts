@@ -12,8 +12,8 @@ export const COMPANY_CARS = [
   },
   {
     id: "car-carry1",
-    name: "Suzuki Carry",
-    short: "Suzuki Carry",
+    name: "Suzuki Carry New",
+    short: "Suzuki Carry New",
     plate: "3 ฒฉ 1209",
     color: "#7c3aed",      // purple
     colorLight: "#ede9fe",

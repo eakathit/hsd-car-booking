@@ -20,7 +20,7 @@ service cloud.firestore {
 
       // อัพเดตได้เฉพาะ field status (cancel/active/complete)
       allow update: if request.resource.data.diff(resource.data).affectedKeys()
-                       .hasOnly(['status', 'fuel']);
+                 .hasOnly(['status', 'fuel', 'cancelledAt', 'cancelledBy']);
 
       // ลบไม่ได้ (ใช้ cancel แทน)
       allow delete: if false;

@@ -39,7 +39,7 @@ export function LiffProvider({ children }: { children: ReactNode }) {
     }
 
     _initPromise = (async () => {
-
+      // ⚠️ DEV ONLY — ปิดก่อน deploy production
       if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
     _user = {
       userId: 'dev-user-id',
@@ -52,7 +52,7 @@ export function LiffProvider({ children }: { children: ReactNode }) {
     setIsReady(true);
     return;
   }
-  
+
       try {
         const liff = (await import("@line/liff")).default;
         await liff.init({ liffId: process.env.NEXT_PUBLIC_LIFF_ID! });
