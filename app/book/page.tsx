@@ -332,8 +332,8 @@ export default function BookPage() {
                             <div style={{ padding:"10px 12px 12px",textAlign:"center" }}>
                               <p style={{ fontSize:13,fontWeight:700,color:isFree?"#1e293b":"#94a3b8",margin:"0 0 4px" }}>{car.name}</p>
                               <p style={{ fontSize:11,margin:"0 0 8px",display:"flex",alignItems:"center",justifyContent:"center",gap:4 }}>
-                                <span style={{ fontSize:10,color:isFree?"#64748b":"#94a3b8",fontWeight:600 }}>ทะเบียน</span>
-                                <span style={{ fontWeight:700,color:isFree?"#64748b":"#94a3b8" }}>{car.plate}</span>
+                                <span style={{ fontSize:10,color:isFree?"#64748b":"#94a3b8",fontWeight:600,lineHeight:1,verticalAlign:"middle" }}>ทะเบียน</span>
+                                <span style={{ fontSize:11,fontWeight:700,color:isFree?"#64748b":"#94a3b8",lineHeight:1,verticalAlign:"middle" }}>{car.plate}</span>
                               </p>
                               {isFree
                                 ? <span style={{ display:"inline-block",fontSize:12,fontWeight:700,color:"#16a34a",background:"#dcfce7",border:"1px solid #bbf7d0",borderRadius:20,padding:"3px 12px" }}>✓ ว่าง</span>
@@ -412,7 +412,7 @@ function Styles() {
       *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
       body,*{font-family:'Sarabun',sans-serif}
       .header{background:white;padding:10px 15px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e2e8f0;position:sticky;top:0;z-index:30;box-shadow:0 1px 8px rgba(0,0,0,.06)}
-      .back-btn{width:32px;height:32px;border-radius:9px;border:1px solid #e2e8f0;background:#f8fafc;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#475569;font-size:18px;flex-shrink:0}
+      .back-btn{width:32px;height:32px;border-radius:9px;border:1px solid #e2e8f0;background:#f8fafc;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#475569;font-size:18px;flex-shrink:0;line-height:1;padding:0}
       .card{background:white;border-radius:16px;padding:18px;box-shadow:0 2px 14px rgba(0,0,0,.07)}
       .step-in{animation:slideIn .3s cubic-bezier(.25,1,.5,1)}
       @keyframes slideIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}

@@ -174,7 +174,7 @@ export default function AdminPage() {
         <div className="wrap">
           <div className="tab-bar">
             <button className={`tb ${tab==="cars"?"active":""}`} onClick={() => setTab("cars")}>🚗 จัดการรถ</button>
-            <button className={`tb ${tab==="export"?"active":""}`} onClick={() => setTab("export")}>📊 Export</button>
+            <button className={`tb ${tab==="export"?"active":""}`} onClick={() => setTab("export")}>📊 Export Data</button>
           </div>
 
           {/* ══ CARS ══ */}
@@ -326,7 +326,7 @@ export default function AdminPage() {
                   </div>
                 )}
                 <button className="btn-primary btn-green" disabled={exporting||exportFrom>exportTo} onClick={handleExport}>
-                  {exporting?"กำลัง Export…":"⬇️ Download CSV"}
+                  {exporting?"กำลัง Export…":"Download CSV"}
                 </button>
                 <p style={{fontSize:11,color:"#94a3b8",marginTop:10,textAlign:"center"}}>เปิดได้ใน Excel และ Google Sheets (รองรับภาษาไทย)</p>
               </div>
