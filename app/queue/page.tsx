@@ -33,6 +33,7 @@ export default function QueuePage() {
   const [filter, setFilter]         = useState<Filter>("date");
   const [fDate, setFDate]           = useState(todayStr());
   const [cancelling, setCancelling] = useState<string|null>(null);
+  const [returning, setReturning] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -56,7 +57,39 @@ export default function QueuePage() {
     finally { setCancelling(null); }
   };
 
-  const canCancel = (b: Booking) => b.status==="booked" && !!user && b.bookerId===user.userId;
+  const handleReturn = async (b: Booking) => {
+  if (!b.id) return;
+  const now = new Date();
+  const actualTime = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+  
+  if (!confirm(
+    `ยืนยันคืนรถ?\n\n🚗 ${b.carName} (${b.carPlate})\n` +
+    `📅 ${fmtDate(b.useDate)}\n` +
+    `🕐 ออก ${b.startTime} → คืน ${actualTime} (เวลาจริง)`
+  )) return;
+
+  setReturning(b.id);
+  try {
+    await updateDoc(doc(db, "bookings", b.id), {
+      status:     "completed",
+      endTime:    actualTime,        // อัปเดตเวลาจริงที่คืน
+      returnedAt: now.toISOString(), // เก็บ timestamp ไว้ด้วย
+    });
+  } catch (err) {
+    console.error(err);
+    alert("เกิดข้อผิดพลาด");
+  } finally {
+    setReturning(null);
+  }
+};
+
+  const canCancel = (b: Booking) =>
+  b.status === "booked" && !!user && b.bookerId === user.userId;
+
+// คืนรถได้เมื่อ: เป็นคนจอง + สถานะยังไม่เสร็จ/ยกเลิก
+const canReturn = (b: Booking) =>
+  (b.status === "booked" || b.status === "active") &&
+  !!user && b.bookerId === user.userId;
 
   return (
     <><Styles />
@@ -134,10 +167,23 @@ export default function QueuePage() {
                         <span className="booker-name">{b.bookerName}</span>
                       </div>
                       {canCancel(b) && (
-                        <button className="cancel-btn" disabled={isCancelling} onClick={() => handleCancel(b)}>
-                          {isCancelling ? <><span className="spin-sm" /> กำลังยกเลิก…</> : "✕ ยกเลิกการจอง"}
-                        </button>
-                      )}
+  <button className="cancel-btn" disabled={isCancelling} onClick={() => handleCancel(b)}>
+    {isCancelling ? <><span className="spin-sm" /> กำลังยกเลิก…</> : "✕ ยกเลิกการจอง"}
+  </button>
+)}
+
+{/* ✅ เพิ่มตรงนี้ — ใต้ปุ่ม cancel */}
+{canReturn(b) && (
+  <button
+    className="return-btn"
+    disabled={returning === b.id}
+    onClick={() => handleReturn(b)}
+  >
+    {returning === b.id
+      ? <><span className="spin-sm" style={{ borderTopColor: "#16a34a", borderColor: "rgba(22,163,74,.3)" }} /> กำลังคืนรถ…</>
+      : "✓ คืนรถแล้ว"}
+  </button>
+)}
                     </div>
                   </div>
                 );
@@ -201,6 +247,26 @@ function Styles() {
       .cancel-btn{margin-top:12px;width:100%;padding:9px;border-radius:10px;font-size:13px;font-weight:700;color:#dc2626;background:#fef2f2;border:1.5px solid #fecaca;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;font-family:'Sarabun',sans-serif}
       .cancel-btn:hover:not(:disabled){background:#fee2e2;border-color:#fca5a5}
       .cancel-btn:disabled{opacity:0.6;cursor:not-allowed}
+      .return-btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 9px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all .15s;
+  font-family: 'Sarabun', sans-serif;
+}
+.return-btn:hover:not(:disabled) { background: #dcfce7; border-color: #86efac; }
+.return-btn:disabled { opacity: 0.6; cursor: not-allowed; }
     `}</style>
   );
 }
