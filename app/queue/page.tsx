@@ -11,7 +11,8 @@ import { useLiff } from "../../lib/liff-context";
 
 type Filter = "date" | "all";
 
-const STATUS_LABEL: Record<string,string> = { booked:"จองแล้ว", active:"กำลังใช้", completed:"เสร็จแล้ว", cancelled:"ยกเลิก" };
+const STATUS_LABEL: Record<string,string> = { booked:"จองแล้ว", active:"กำลังใช้งาน", completed:"คืนรถแล้ว", cancelled:"ยกเลิกการจอง" };
+
 const STATUS_COLOR: Record<string,{bg:string;text:string;dot:string}> = {
   booked:    { bg:"#dbeafe", text:"#1d4ed8", dot:"#3b82f6" },
   active:    { bg:"#dcfce7", text:"#16a34a", dot:"#22c55e" },

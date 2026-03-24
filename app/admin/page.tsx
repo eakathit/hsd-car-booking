@@ -12,7 +12,7 @@ import { db, storage } from "../../lib/firebase";
 import { useLiff } from "../../lib/liff-context";
 import BottomNav from "../components/BottomNav";
 import type { Booking } from "../../types";
-
+import * as XLSX from 'xlsx';
 interface CarDoc {
   id: string;
   name: string;
@@ -34,7 +34,7 @@ function fmtDateTH(d: string) {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  booked: "จองแล้ว", active: "กำลังใช้", completed: "เสร็จแล้ว", cancelled: "ยกเลิก",
+  booked: "จองแล้ว", active: "กำลังใช้งาน", completed: "คืนรถแล้ว", cancelled: "ยกเลิกการจอง",
 };
 const STATUS_STYLE: Record<string, { bg: string; text: string; dot: string }> = {
   booked:    { bg: "#dbeafe", text: "#1d4ed8", dot: "#3b82f6" },
@@ -84,7 +84,7 @@ export default function AdminPage() {
   const { user, isAdmin, isReady } = useLiff();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [tab, setTab] = useState<"cars" | "search">("cars");
+  const [tab, setTab] = useState<"cars" | "export">("cars");
 
   // ── Cars state ──
   const [cars, setCars]                     = useState<CarDoc[]>([]);
@@ -100,13 +100,11 @@ export default function AdminPage() {
     colorLight: COLOR_OPTIONS[0].colorLight,
   });
 
-  // ── Search state ──
-  const [searchDate,     setSearchDate]     = useState(todayStr());
-  const [searching,      setSearching]      = useState(false);
-  const [searchResults,  setSearchResults]  = useState<Booking[] | null>(null);
-  const [searchMode,     setSearchMode]     = useState<"single" | "range">("single");
-  const [searchDateFrom, setSearchDateFrom] = useState(todayStr());
-  const [searchDateTo,   setSearchDateTo]   = useState(todayStr());
+
+  const [exportFrom,  setExportFrom]  = useState(todayStr());
+const [exportTo,    setExportTo]    = useState(todayStr());
+const [exporting,   setExporting]   = useState(false);
+const [exportCount, setExportCount] = useState<number | null>(null);
 
   useEffect(() => { if (isReady && !isAdmin) router.replace("/"); }, [isReady, isAdmin, router]);
 
@@ -183,25 +181,43 @@ export default function AdminPage() {
   };
 
   // ── Search handler ──
-  const handleSearch = async () => {
-    setSearching(true);
-    setSearchResults(null);
-    try {
-      const from = searchMode === "single" ? searchDate : searchDateFrom;
-      const to   = searchMode === "single" ? searchDate : searchDateTo;
-      const snap = await getDocs(
-        query(
-          collection(db, "bookings"),
-          where("useDate", ">=", from),
-          where("useDate", "<=", to),
-          orderBy("useDate", "asc"),
-          orderBy("startTime", "asc"),
-        ),
-      );
-      setSearchResults(snap.docs.map((d) => ({ id: d.id, ...d.data() } as Booking)));
-    } catch (e) { console.error(e); alert("ค้นหาไม่สำเร็จ"); }
-    finally { setSearching(false); }
-  };
+  function exportExcel(bookings: Booking[]) {
+  const rows = bookings.map((b) => ({
+    "วันที่ใช้": b.useDate,
+    "เวลาออก":  b.startTime,
+    "เวลาเข้า": b.endTime,
+    "รถ":       b.carName,
+    "ทะเบียน":  b.carPlate,
+    "ผู้จอง":   b.bookerName,
+    "ผู้ใช้รถ": b.driverName,
+    "จาก":      b.fromLocation,
+    "ถึง":      b.toLocation,
+    "สำหรับ":   b.purpose,
+    "สถานะ": STATUS_LABEL[b.status] ?? b.status,
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws["!cols"] = Object.keys(rows[0] || {}).map(() => ({ wch: 18 }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "การจอง");
+  XLSX.writeFile(wb, `bookings_${todayStr()}.xlsx`);
+}
+
+const handleExport = async () => {
+  setExporting(true); setExportCount(null);
+  try {
+    const snap = await getDocs(query(
+      collection(db, "bookings"),
+      where("useDate", ">=", exportFrom),
+      where("useDate", "<=", exportTo),
+      orderBy("useDate", "asc"),
+      orderBy("startTime", "asc"),
+    ));
+    const data = snap.docs.map((d) => ({ id: d.id, ...d.data() } as Booking));
+    setExportCount(data.length);
+    if (data.length > 0) exportExcel(data);
+  } catch { alert("Export ไม่สำเร็จ"); }
+  finally { setExporting(false); }
+};
 
   if (!isReady || !isAdmin) return (
     <><Styles />
@@ -211,14 +227,6 @@ export default function AdminPage() {
     </>
   );
 
-  // Group search results by date (for range mode)
-  const groupedResults = searchResults
-    ? searchResults.reduce<Record<string, Booking[]>>((acc, b) => {
-        if (!acc[b.useDate]) acc[b.useDate] = [];
-        acc[b.useDate].push(b);
-        return acc;
-      }, {})
-    : null;
 
   return (
     <><Styles />
@@ -240,7 +248,7 @@ export default function AdminPage() {
           {/* Tab bar */}
           <div className="tab-bar">
             <button className={`tb ${tab === "cars" ? "active" : ""}`} onClick={() => setTab("cars")}>🚗 จัดการรถ</button>
-            <button className={`tb ${tab === "search" ? "active" : ""}`} onClick={() => setTab("search")}>🔍 ค้นหาข้อมูล</button>
+            <button className={`tb ${tab === "export" ? "active" : ""}`} onClick={() => setTab("export")}>📊 Export Excel</button>
           </div>
 
           {/* ══ CARS TAB ══ */}
@@ -360,98 +368,28 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ══ SEARCH TAB ══ */}
-          {tab === "search" && (
-            <div>
-              <div className="form-card">
-                <p className="form-title">🔍 ค้นหาข้อมูลการจอง</p>
+          {/* ══ EXPORT TAB ══ */}
+{tab === "export" && (
+  <div>
+    <div className="form-card">
+      <p className="form-title">📊 Export ข้อมูลการจองเป็น Excel</p>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        <div className="fg">
+          <label className="fl">📅 จากวันที่</label>
+          <input type="date" className="inp" value={exportFrom} onChange={(e) => setExportFrom(e.target.value)} />
+        </div>
+        <div className="fg">
+          <label className="fl">📅 ถึงวันที่</label>
+          <input type="date" className="inp" value={exportTo} onChange={(e) => setExportTo(e.target.value)} />
+        </div>
+      </div>
+      <button className="btn-primary btn-green" disabled={exporting || exportFrom > exportTo} onClick={handleExport}>
+        {exporting ? "กำลัง Export…" : "⬇️ Download Excel (.xlsx)"}
+      </button>
 
-                {/* Mode toggle */}
-                <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-                  <button
-                    onClick={() => setSearchMode("single")}
-                    style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "1.5px solid", cursor: "pointer", transition: "all .15s", borderColor: searchMode === "single" ? "#1d4ed8" : "#e2e8f0", background: searchMode === "single" ? "#eff6ff" : "white", color: searchMode === "single" ? "#1d4ed8" : "#64748b" }}>
-                    วันเดียว
-                  </button>
-                  <button
-                    onClick={() => setSearchMode("range")}
-                    style={{ flex: 1, padding: "8px 0", borderRadius: 10, fontSize: 13, fontWeight: 600, border: "1.5px solid", cursor: "pointer", transition: "all .15s", borderColor: searchMode === "range" ? "#1d4ed8" : "#e2e8f0", background: searchMode === "range" ? "#eff6ff" : "white", color: searchMode === "range" ? "#1d4ed8" : "#64748b" }}>
-                    ช่วงวันที่
-                  </button>
-                </div>
-
-                {searchMode === "single" ? (
-                  <div className="fg">
-                    <label className="fl">📅 วันที่</label>
-                    <input type="date" className="inp" value={searchDate} onChange={(e) => setSearchDate(e.target.value)} />
-                  </div>
-                ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                    <div className="fg">
-                      <label className="fl">📅 จากวันที่</label>
-                      <input type="date" className="inp" value={searchDateFrom} onChange={(e) => setSearchDateFrom(e.target.value)} />
-                    </div>
-                    <div className="fg">
-                      <label className="fl">📅 ถึงวันที่</label>
-                      <input type="date" className="inp" value={searchDateTo} onChange={(e) => setSearchDateTo(e.target.value)} />
-                    </div>
-                  </div>
-                )}
-
-                <button className="btn-primary" disabled={searching || (searchMode === "range" && searchDateFrom > searchDateTo)} onClick={handleSearch}>
-                  {searching ? <><span className="spin-sm" /> กำลังค้นหา…</> : "🔍 ค้นหา"}
-                </button>
-              </div>
-
-              {/* Results */}
-              {searchResults !== null && (
-                <div>
-                  {/* Summary bar */}
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12, padding: "0 2px" }}>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: "#1e3a5f" }}>
-                      {searchResults.length > 0
-                        ? `พบ ${searchResults.length} รายการ`
-                        : "ไม่พบข้อมูล"}
-                    </p>
-                    {searchResults.length > 0 && (
-                      <p style={{ fontSize: 11, color: "#94a3b8" }}>
-                        {searchMode === "single" ? fmtDateTH(searchDate) : `${fmtDateTH(searchDateFrom)} – ${fmtDateTH(searchDateTo)}`}
-                      </p>
-                    )}
-                  </div>
-
-                  {searchResults.length === 0 ? (
-                    <div className="empty-card">
-                      <p style={{ fontSize: 32, marginBottom: 8 }}>🔍</p>
-                      <p className="empty-title">ไม่พบข้อมูล</p>
-                      <p className="empty-sub">ไม่มีการจองในช่วงวันที่เลือก</p>
-                    </div>
-                  ) : (
-                    <div className="list">
-                      {/* Render grouped by date if range mode */}
-                      {searchMode === "range"
-                        ? Object.entries(groupedResults!).map(([date, dayBookings]) => (
-                            <div key={date}>
-                              {/* Date header */}
-                              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, marginTop: 4 }}>
-                                <div style={{ height: 1, flex: 1, background: "#e2e8f0" }} />
-                                <span style={{ fontSize: 11, fontWeight: 700, color: "#64748b", background: "#f1f5f9", borderRadius: 20, padding: "3px 12px", whiteSpace: "nowrap" }}>
-                                  📅 {fmtDateTH(date)} · {dayBookings.length} รายการ
-                                </span>
-                                <div style={{ height: 1, flex: 1, background: "#e2e8f0" }} />
-                              </div>
-                              {dayBookings.map((b) => <BookingCard key={b.id} booking={b} cars={cars} />)}
-                            </div>
-                          ))
-                        : searchResults.map((b) => <BookingCard key={b.id} booking={b} cars={cars} />)
-                      }
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
+    </div>
+  </div>
+)}
           <div style={{ height: 100 }} />
         </div>
         <BottomNav />
@@ -460,68 +398,6 @@ export default function AdminPage() {
   );
 }
 
-// ── Booking card component ──
-function BookingCard({ booking: b, cars }: { booking: Booking; cars: CarDoc[] }) {
-  const car = cars.find((c) => c.id === b.carId);
-  const sc  = STATUS_STYLE[b.status] ?? STATUS_STYLE.booked;
-
-  return (
-    <div className="bk-card">
-      {/* color strip */}
-      <div style={{ width: 5, flexShrink: 0, background: car?.color ?? "#94a3b8", borderRadius: "12px 0 0 12px" }} />
-
-      <div style={{ flex: 1, padding: "13px 14px" }}>
-        {/* Row 1: status + time */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "3px 10px", background: sc.bg, color: sc.text }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: sc.dot, flexShrink: 0, display: "inline-block" }} />
-            {STATUS_LABEL[b.status] ?? b.status}
-          </span>
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#475569", background: "#f1f5f9", borderRadius: 8, padding: "3px 9px" }}>
-            🕐 {b.startTime} – {b.endTime}
-          </span>
-        </div>
-
-        {/* Row 2: driver name */}
-        <p style={{ fontSize: 15, fontWeight: 700, color: "#1e293b", margin: "0 0 4px" }}>
-          👤 {b.driverName}
-        </p>
-
-        {/* Row 3: car */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
-          <span style={{ width: 8, height: 8, borderRadius: "50%", background: car?.color ?? "#94a3b8", flexShrink: 0, display: "inline-block" }} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#475569" }}>{b.carName}</span>
-          <span style={{ fontSize: 11, color: "#94a3b8" }}>({b.carPlate})</span>
-        </div>
-
-        {/* Divider */}
-        <div style={{ height: 1, background: "#f1f5f9", margin: "8px 0" }} />
-
-        {/* Row 4: route */}
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 6, marginBottom: 4 }}>
-          <span style={{ fontSize: 13, flexShrink: 0 }}>📍</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#334155" }}>
-            {b.fromLocation}
-            <span style={{ color: "#94a3b8", fontWeight: 400 }}> → </span>
-            {b.toLocation}
-          </span>
-        </div>
-
-        {/* Row 5: purpose */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
-          <span style={{ fontSize: 13 }}>📋</span>
-          <span style={{ fontSize: 12, color: "#64748b" }}>{b.purpose}</span>
-        </div>
-
-        {/* Row 6: booked by */}
-        <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
-          <span style={{ fontSize: 11, color: "#94a3b8" }}>จองโดย</span>
-          <span style={{ fontSize: 11, fontWeight: 600, color: "#64748b" }}>{b.bookerName}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function Styles() {
   return (
