@@ -82,15 +82,15 @@ export function LiffProvider({ children }: { children: ReactNode }) {
 
     _initPromise = (async () => {
       // ⚠️ DEV ONLY — hardcode admin เพื่อทดสอบ localhost
-      if (typeof window !== "undefined" && window.location.hostname === "localhost") {
-        _user = { userId: "dev-user-id", displayName: "eakarthit", pictureUrl: "", role: "admin" };
-        _isLoggedIn = true;
-        setUser(_user);
-        setIsLoggedIn(true);
-        setIsAdmin(true);
-        setIsReady(true);
-        return;
-      }
+      // if (typeof window !== "undefined" && window.location.hostname === "localhost") {
+      //   _user = { userId: "dev-user-id", displayName: "eakarthit", pictureUrl: "", role: "admin" };
+      //   _isLoggedIn = true;
+      //   setUser(_user);
+      //   setIsLoggedIn(true);
+      //   setIsAdmin(true);
+      //   setIsReady(true);
+      //   return;
+      // }
 
       try {
         const liff = (await import("@line/liff")).default;
