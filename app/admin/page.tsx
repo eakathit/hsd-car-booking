@@ -79,6 +79,27 @@ function ImgWithSkeleton({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+function compressImage(file: File, maxWidth = 1200, quality = 0.8): Promise<File> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement("canvas");
+      canvas.width  = img.width  * scale;
+      canvas.height = img.height * scale;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        (blob) => resolve(new File([blob!], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" })),
+        "image/jpeg",
+        quality,
+      );
+    };
+    img.src = url;
+  });
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const { user, isAdmin, isReady } = useLiff();
@@ -121,14 +142,17 @@ const [exportCount, setExportCount] = useState<number | null>(null);
   }, [isAdmin]);
 
   // ── Car handlers ──
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) { alert("กรุณาเลือกไฟล์รูปภาพ"); return; }
-    if (file.size > 5 * 1024 * 1024) { alert("ไฟล์ใหญ่เกิน 5MB"); return; }
-    setImageFile(file);
-    setPreviewUrl(URL.createObjectURL(file));
-  };
+const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) { alert("กรุณาเลือกไฟล์รูปภาพ"); return; }
+  if (file.size > 10 * 1024 * 1024) { alert("ไฟล์ใหญ่เกิน 10MB"); return; }
+
+  const compressed = await compressImage(file);
+
+  setImageFile(compressed);
+  setPreviewUrl(URL.createObjectURL(compressed));
+};
 
   const uploadImage = (file: File, carName: string): Promise<{ url: string; path: string }> =>
     new Promise((resolve, reject) => {
@@ -461,7 +485,11 @@ function Styles() {
   0%   { background-position: 200% 0 }
   100% { background-position: -200% 0 }
 }
-
+      @media (min-width: 768px) {
+  .wrap { max-width: 960px; padding: 20px 28px; }
+  .list { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
+  .car-card { min-height: 100px; }
+}
       
     `}</style>
   );

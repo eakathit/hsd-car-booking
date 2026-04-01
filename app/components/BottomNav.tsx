@@ -9,11 +9,8 @@ const TABS = [
     href: "/",
     label: "สถานะ",
     icon: () => (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-        fill="none" stroke="currentColor" strokeWidth={1.8}
-        width="22" height="22">
-        <path strokeLinecap="round" strokeLinejoin="round"
-          d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} width="22" height="22">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955a1.126 1.126 0 011.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
       </svg>
     ),
   },
@@ -21,40 +18,31 @@ const TABS = [
     href: "/queue",
     label: "คิวรถ",
     icon: () => (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-        fill="none" stroke="currentColor" strokeWidth={1.8}
-        width="22" height="22">
-        <path strokeLinecap="round" strokeLinejoin="round"
-          d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} width="22" height="22">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
       </svg>
     ),
   },
   {
     href: "/book",
     label: "จองรถ",
+    isAction: true,
     icon: () => (
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-        fill="currentColor" width="22" height="22">
-        <path fillRule="evenodd"
-          d="M12 3.75a.75.75 0 01.75.75v6.75h6.75a.75.75 0 010 1.5h-6.75v6.75a.75.75 0 01-1.5 0v-6.75H4.5a.75.75 0 010-1.5h6.75V4.5a.75.75 0 01.75-.75z"
-          clipRule="evenodd" />
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22" height="22">
+        <path fillRule="evenodd" d="M12 3.75a.75.75 0 01.75.75v6.75h6.75a.75.75 0 010 1.5h-6.75v6.75a.75.75 0 01-1.5 0v-6.75H4.5a.75.75 0 010-1.5h6.75V4.5a.75.75 0 01.75-.75z" clipRule="evenodd" />
       </svg>
     ),
-    isAction: true,
   },
 ];
 
 const ADMIN_TAB = {
   href: "/admin",
   label: "Admin",
+  isAction: false,
   icon: () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth={1.8}
-      width="22" height="22">
-      <path strokeLinecap="round" strokeLinejoin="round"
-        d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
-      <path strokeLinecap="round" strokeLinejoin="round"
-        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} width="22" height="22">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
     </svg>
   ),
 };
@@ -62,71 +50,132 @@ const ADMIN_TAB = {
 export default function BottomNav() {
   const path = usePathname();
   const { isAdmin } = useLiff();
-
   const allTabs = isAdmin ? [...TABS, ADMIN_TAB] : TABS;
 
   return (
-    <nav style={{
-      position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
-      background: "white",
-      borderTop: "1px solid #e2e8f0",
-      display: "flex",
-      boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
-      paddingBottom: "env(safe-area-inset-bottom)",
-    }}>
-      {allTabs.map((tab) => {
-        const active = path === tab.href;
+    <>
+      <style>{`
+        .sidebar-nav { display: none; }
+        .bottom-nav  { display: flex;  }
 
-        if ("isAction" in tab && tab.isAction) {
+        @media (min-width: 768px) {
+          .sidebar-nav { display: flex; }
+          .bottom-nav  { display: none; }
+        }
+      `}</style>
+
+      {/* ── Sidebar (Desktop) ── */}
+      <nav className="sidebar-nav" style={{
+        position: "fixed", top: 0, left: 0, bottom: 0, width: 220,
+        background: "white",
+        borderRight: "1px solid #e2e8f0",
+        flexDirection: "column",
+        zIndex: 50,
+        boxShadow: "2px 0 12px rgba(0,0,0,0.06)",
+        padding: "0 0 24px",
+      }}>
+        {/* Logo */}
+        <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: 10 }}>
+          <img src="/logo.jpg" alt="" style={{ width: 36, height: 36, borderRadius: 10, objectFit: "cover", flexShrink: 0 }}
+            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+          <div>
+            <p style={{ fontSize: 9, color: "#94a3b8", margin: 0, fontWeight: 600, letterSpacing: "0.05em" }}>HARU SYSTEM</p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#1e3a5f", margin: 0, fontFamily: "Prompt,sans-serif" }}>Car Booking</p>
+          </div>
+        </div>
+
+        {/* Nav items */}
+        <div style={{ flex: 1, padding: "12px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
+          {allTabs.map((tab) => {
+            const active = path === tab.href;
+            const isAction = "isAction" in tab && tab.isAction;
+
+            return (
+              <Link key={tab.href} href={tab.href} style={{
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "11px 14px",
+                borderRadius: 12,
+                textDecoration: "none",
+                background: isAction
+                  ? "linear-gradient(135deg,#1d4ed8,#1e3a5f)"
+                  : active ? "#eff6ff" : "transparent",
+                color: isAction ? "white" : active ? "#1d4ed8" : "#64748b",
+                fontWeight: active || isAction ? 700 : 500,
+                fontSize: 14,
+                fontFamily: "Sarabun,sans-serif",
+                transition: "all .15s",
+                boxShadow: isAction ? "0 4px 12px rgba(29,78,216,.3)" : "none",
+                border: active && !isAction ? "1.5px solid #bfdbfe" : "1.5px solid transparent",
+              }}>
+                <span style={{ flexShrink: 0, display: "flex" }}>{tab.icon()}</span>
+                {tab.label}
+                {active && !isAction && (
+                  <div style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: "#1d4ed8" }} />
+                )}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div style={{ padding: "12px 20px 0", borderTop: "1px solid #f1f5f9" }}>
+          <p style={{ fontSize: 10, color: "#cbd5e1", margin: 0, textAlign: "center" }}>Haru System Development</p>
+        </div>
+      </nav>
+
+      {/* ── Bottom Nav (Mobile) ── */}
+      <nav className="bottom-nav" style={{
+        position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
+        background: "white",
+        borderTop: "1px solid #e2e8f0",
+        boxShadow: "0 -4px 20px rgba(0,0,0,0.08)",
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}>
+        {allTabs.map((tab) => {
+          const active = path === tab.href;
+          const isAction = "isAction" in tab && tab.isAction;
+
+          if (isAction) {
+            return (
+              <Link key={tab.href} href={tab.href} style={{
+                flex: 1, display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
+                padding: "10px 0 8px", textDecoration: "none", gap: 3,
+              }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: "50%",
+                  background: "linear-gradient(135deg,#1d4ed8,#1e3a5f)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "white", marginTop: -20,
+                  boxShadow: "0 4px 16px rgba(29,78,216,0.45)",
+                }}>
+                  {tab.icon()}
+                </div>
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#1d4ed8", marginTop: 2 }}>{tab.label}</span>
+              </Link>
+            );
+          }
+
           return (
             <Link key={tab.href} href={tab.href} style={{
               flex: 1, display: "flex", flexDirection: "column",
               alignItems: "center", justifyContent: "center",
               padding: "10px 0 8px", textDecoration: "none", gap: 3,
+              color: active ? "#1d4ed8" : "#94a3b8",
+              transition: "color 0.15s",
+              position: "relative",
             }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: "50%",
-                background: "linear-gradient(135deg, #1d4ed8, #1e3a5f)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "white", marginTop: -20,
-                boxShadow: "0 4px 16px rgba(29,78,216,0.45)",
-              }}>
-                {tab.icon()}
-              </div>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#1d4ed8", marginTop: 2 }}>
+              {tab.icon()}
+              <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, color: active ? "#1d4ed8" : "#94a3b8" }}>
                 {tab.label}
               </span>
+              {active && (
+                <div style={{ position: "absolute", top: 0, width: 32, height: 2, borderRadius: 2, background: "#1d4ed8" }} />
+              )}
             </Link>
           );
-        }
-
-        return (
-          <Link key={tab.href} href={tab.href} style={{
-            flex: 1, display: "flex", flexDirection: "column",
-            alignItems: "center", justifyContent: "center",
-            padding: "10px 0 8px", textDecoration: "none", gap: 3,
-            color: active ? "#1d4ed8" : "#94a3b8",
-            transition: "color 0.15s",
-            position: "relative",
-          }}>
-            {tab.icon()}
-            <span style={{
-              fontSize: 10, fontWeight: active ? 700 : 500,
-              color: active ? "#1d4ed8" : "#94a3b8",
-            }}>
-              {tab.label}
-            </span>
-            {/* ✅ indicator บนสุด — สีน้ำเงินทุก tab รวม Admin */}
-            {active && (
-              <div style={{
-                position: "absolute", top: 0,
-                width: 32, height: 2, borderRadius: 2,
-                background: "#1d4ed8",
-              }} />
-            )}
-          </Link>
-        );
-      })}
-    </nav>
+        })}
+      </nav>
+    </>
   );
 }

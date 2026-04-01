@@ -43,4 +43,8 @@ export interface Booking {
   createdAt?: any;
   cancelledAt?: string;
   cancelledBy?: string;
+
+  // ── Multi-day booking ──────────────────────────────────────
+  groupId?: string;    // ถ้ามี = เป็นส่วนหนึ่งของการจองหลายวัน
+  totalDays?: number;  // จำนวนวันทั้งหมดในกลุ่มนี้
 }
