@@ -91,6 +91,7 @@ export default function QueuePage() {
         </header>
 
         <div className="wrap">
+          {/* Filter bar */}
           <div className="filter-bar">
             {(["date", "all"] as Filter[]).map((f) => (
               <button key={f} className={`fb ${filter === f ? "active" : ""}`} onClick={() => setFilter(f)}>
@@ -117,57 +118,73 @@ export default function QueuePage() {
           ) : (
             <div className="list">
               {bookings.map((b) => {
-                const car   = cars.find((c) => c.id === b.carId);
-                const sc    = STATUS_COLOR[b.status] ?? STATUS_COLOR.booked;
-                const isMine = !!user && b.bookerId === user.userId;
+                const sc         = STATUS_COLOR[b.status] ?? STATUS_COLOR.booked;
+                const isMine     = !!user && b.bookerId === user.userId;
                 const isMultiDay = !!(b.totalDays && b.totalDays > 1);
+                const carColor   = cars.find((c) => c.id === b.carId)?.color || "#3b82f6";
 
                 return (
                   <div key={b.id} className="bk-card">
-                    {/* Card header */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        {car?.imageUrl ? (
-                          <div style={{ width: 40, height: 40, borderRadius: 10, overflow: "hidden", flexShrink: 0 }}>
-                            <img src={car.imageUrl} alt={car.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                          </div>
-                        ) : (
-                          <div style={{ width: 40, height: 40, borderRadius: 10, background: car?.colorLight || "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>🚗</div>
-                        )}
-                        <div>
-                          <p style={{ fontWeight: 700, fontSize: 14, color: "#1e3a5f", margin: 0 }}>{b.carName}</p>
-                          <p style={{ fontSize: 11, color: "#94a3b8", margin: 0 }}>{b.carPlate}</p>
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                        <span style={{ fontSize: 11, fontWeight: 700, color: sc.text, background: sc.bg, borderRadius: 20, padding: "3px 10px", display: "flex", alignItems: "center", gap: 4 }}>
-                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: sc.dot, display: "inline-block" }} />
-                          {STATUS_LABEL[b.status]}
+
+                    {/* ── Card header: ชื่อรถ + ทะเบียน + badges ── */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 10, borderBottom: "1px solid #f1f5f9" }}>
+                      {/* ชื่อรถ + ทะเบียน */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                        <span style={{ width: 9, height: 9, borderRadius: "50%", background: carColor, display: "inline-block", flexShrink: 0 }} />
+                        <p style={{ fontWeight: 700, fontSize: 15, color: "#1e3a5f", margin: 0 }}>{b.carName}</p>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: "#1d4ed8", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 4, padding: "2px 8px", letterSpacing: "0.3px" }}>
+                          {b.carPlate}
                         </span>
-                        {/* ── Multi-day badge ── */}
+                      </div>
+                      {/* Status + extra badges */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                        {isMine && (
+                          <span style={{ fontSize: 10, color: "#1d4ed8", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 20, padding: "2px 8px", fontWeight: 600 }}>
+                            ของฉัน
+                          </span>
+                        )}
                         {isMultiDay && (
                           <span style={{ fontSize: 10, fontWeight: 700, color: "#7c3aed", background: "#f5f3ff", border: "1px solid #ddd6fe", borderRadius: 20, padding: "2px 8px" }}>
                             📆 {b.totalDays} วัน
                           </span>
                         )}
-                        {isMine && <span style={{ fontSize: 10, color: "#1d4ed8", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 20, padding: "2px 8px", fontWeight: 600 }}>ของฉัน</span>}
+                        <span style={{ fontSize: 11, fontWeight: 700, color: sc.text, background: sc.bg, borderRadius: 20, padding: "3px 10px", display: "flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: sc.dot, display: "inline-block" }} />
+                          {STATUS_LABEL[b.status]}
+                        </span>
                       </div>
                     </div>
 
-                    {/* Info rows */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 12px", marginBottom: 10 }}>
-                      <div><p style={{ fontSize: 10, color: "#94a3b8", margin: "0 0 1px" }}>📅 วันที่</p><p style={{ fontSize: 13, fontWeight: 600, color: "#1e3a5f", margin: 0 }}>{fmtDate(b.useDate)}</p></div>
-                      <div><p style={{ fontSize: 10, color: "#94a3b8", margin: "0 0 1px" }}>🕐 เวลา</p><p style={{ fontSize: 13, fontWeight: 600, color: "#1e3a5f", margin: 0 }}>{b.startTime} – {b.endTime}</p></div>
-                      <div><p style={{ fontSize: 10, color: "#94a3b8", margin: "0 0 1px" }}>👤 ผู้จอง</p><p style={{ fontSize: 13, fontWeight: 600, color: "#1e3a5f", margin: 0 }}>{b.bookerName}</p></div>
-                      <div><p style={{ fontSize: 10, color: "#94a3b8", margin: "0 0 1px" }}>🚘 ผู้ขับ</p><p style={{ fontSize: 13, fontWeight: 600, color: "#1e3a5f", margin: 0 }}>{b.driverName}</p></div>
+                    {/* ── Info rows ── */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 12px", marginBottom: 10 }}>
+                      <div>
+                        <p style={{ fontSize: 10, color: "#94a3b8", margin: "0 0 3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>วันที่</p>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: "#1e3a5f", margin: 0 }}>{fmtDate(b.useDate)}</p>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 10, color: "#94a3b8", margin: "0 0 3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>เวลา</p>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: "#1e3a5f", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: 6, padding: "2px 8px", display: "inline-block" }}>
+                          {b.startTime} – {b.endTime}
+                        </span>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 10, color: "#94a3b8", margin: "0 0 3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>ผู้จอง</p>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: "#1e3a5f", margin: 0 }}>{b.bookerName}</p>
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 10, color: "#94a3b8", margin: "0 0 3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>ผู้ขับ</p>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: "#1e3a5f", margin: 0 }}>{b.driverName}</p>
+                      </div>
                     </div>
 
-                    <div style={{ background: "#f8fafc", borderRadius: 8, padding: "8px 10px", marginBottom: 10 }}>
-                      <p style={{ fontSize: 11, color: "#64748b", margin: 0 }}>📍 {b.fromLocation} → {b.toLocation}</p>
-                      <p style={{ fontSize: 11, color: "#64748b", margin: "2px 0 0" }}>📋 {b.purpose}</p>
+                    {/* ── Route & purpose ── */}
+                    <div style={{ background: "#f8fafc", borderRadius: 8, padding: "8px 10px", marginBottom: 10, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                      <span style={{ fontSize: 11, color: "#64748b" }}>📍 {b.fromLocation} → {b.toLocation}</span>
+                      <span style={{ width: 3, height: 3, borderRadius: "50%", background: "#cbd5e1", display: "inline-block", flexShrink: 0 }} />
+                      <span style={{ fontSize: 11, color: "#64748b" }}>📋 {b.purpose}</span>
                     </div>
 
-                    {/* Actions */}
+                    {/* ── Actions ── */}
                     {(canCancel(b) || canReturn(b)) && (
                       <div style={{ display: "flex", gap: 8 }}>
                         {canCancel(b) && (
@@ -188,6 +205,7 @@ export default function QueuePage() {
                         )}
                       </div>
                     )}
+
                   </div>
                 );
               })}
@@ -226,7 +244,6 @@ function Styles() {
       .empty-sub{font-size:13px;color:#94a3b8}
       .list{display:flex;flex-direction:column;gap:12px}
       .bk-card{background:white;border-radius:16px;padding:14px;box-shadow:0 2px 14px rgba(0,0,0,.07)}
-
     `}</style>
   );
 }
